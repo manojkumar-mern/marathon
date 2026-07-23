@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 function WhatsAppFloat() {
   return (
-    <div className="group fixed bottom-6 right-6 z-50">
+    <div className="group fixed bottom-6 right-6 z-[100]">
       {/* Tooltip */}
       <div
         aria-hidden="true"

@@ -55,7 +55,7 @@ function CountdownUnit({ value, label }) {
     <div className="flex flex-col items-center">
       <span
         className="font-display font-black italic leading-none text-sf-white"
-        style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)' }}
+        style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontVariantNumeric: 'tabular-nums' }}
       >
         {String(value).padStart(2, '0')}
       </span>

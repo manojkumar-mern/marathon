@@ -19,73 +19,86 @@ function Navbar() {
 
   useEffect(() => {
     if (!isOpen) return undefined
+    const scrollY = window.scrollY
+    const style = document.body.style
+    style.position = 'fixed'
+    style.top = `-${scrollY}px`
+    style.left = '0'
+    style.right = '0'
+    style.overflow = 'hidden'
     const onKey = (e) => {
       if (e.key === 'Escape') {
         setIsOpen(false)
         menuButtonRef.current?.focus()
       }
     }
-    document.body.classList.add('overflow-hidden')
     document.addEventListener('keydown', onKey)
     return () => {
-      document.body.classList.remove('overflow-hidden')
+      style.position = ''
+      style.top = ''
+      style.left = ''
+      style.right = ''
+      style.overflow = ''
+      window.scrollTo(0, scrollY)
       document.removeEventListener('keydown', onKey)
     }
   }, [isOpen])
 
   return (
-    <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-steel bg-obsidian/95 shadow-2xl shadow-black/50 backdrop-blur-md'
-          : 'bg-transparent'
-      }`}
-    >
-      <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
-        <BrandMark />
+    <>
+      <header
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          isScrolled
+            ? 'border-b border-steel bg-obsidian/95 shadow-2xl shadow-black/50 backdrop-blur-md'
+            : 'bg-transparent'
+        }`}
+      >
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
+          <BrandMark />
 
-        {/* Desktop nav links */}
-        <nav aria-label="Primary navigation" className="hidden lg:block">
-          <ul className="flex items-center gap-8">
-            {navigationItems.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  className={({ isActive }) =>
-                    `text-sm font-medium tracking-wide transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
-                      isActive
-                        ? 'text-sf-white'
-                        : 'text-muted hover:text-sf-white'
-                    }`
-                  }
-                  to={item.to}
-                >
-                  {item.label}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
+          {/* Desktop nav links */}
+          <nav aria-label="Primary navigation" className="hidden lg:block">
+            <ul className="flex items-center gap-8">
+              {navigationItems.map((item) => (
+                <li key={item.to}>
+                  <NavLink
+                    className={({ isActive }) =>
+                      `text-sm font-medium tracking-wide transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
+                        isActive
+                          ? 'text-sf-white'
+                          : 'text-muted hover:text-sf-white'
+                      }`
+                    }
+                    to={item.to}
+                  >
+                    {item.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
 
-        {/* Desktop CTA */}
-        <div className="hidden lg:block">
-          <Button to="/register">Register Now</Button>
+          {/* Desktop CTA */}
+          <div className="hidden lg:block">
+            <Button to="/register">Register Now</Button>
+          </div>
+
+          {/* Mobile burger button */}
+          <button
+            ref={menuButtonRef}
+            aria-controls="mobile-menu"
+            aria-expanded={isOpen}
+            aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
+            className="grid size-10 place-items-center rounded-full border border-steel text-sf-white transition-colors hover:border-steel-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember lg:hidden"
+            type="button"
+            onClick={() => setIsOpen((v) => !v)}
+          >
+            {isOpen ? <FaXmark aria-hidden="true" /> : <FaBars aria-hidden="true" />}
+          </button>
         </div>
+      </header>
 
-        {/* Mobile burger button */}
-        <button
-          ref={menuButtonRef}
-          aria-controls="mobile-menu"
-          aria-expanded={isOpen}
-          aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
-          className="grid size-10 place-items-center rounded-full border border-steel text-sf-white transition-colors hover:border-steel-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember lg:hidden"
-          type="button"
-          onClick={() => setIsOpen((v) => !v)}
-        >
-          {isOpen ? <FaXmark aria-hidden="true" /> : <FaBars aria-hidden="true" />}
-        </button>
-      </div>
-
-      {/* Mobile overlay backdrop */}
+      {/* Mobile overlay backdrop — rendered outside <header> so backdrop-filter never corrupts fixed positioning */}
       <div
         aria-hidden={!isOpen}
         className={`fixed inset-0 z-40 bg-obsidian/80 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
@@ -94,15 +107,15 @@ function Navbar() {
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Mobile slide-in drawer */}
+      {/* Mobile slide-in drawer — rendered outside <header> for same reason */}
       <aside
         id="mobile-menu"
         aria-label="Mobile navigation"
-        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-xs flex-col bg-carbon px-6 py-6 shadow-2xl transition-transform duration-300 lg:hidden ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-xs flex-col bg-carbon shadow-2xl transition-transform duration-300 lg:hidden ${
+          isOpen ? 'translate-x-0 visible' : 'translate-x-full invisible'
         }`}
       >
-        <div className="flex items-center justify-between border-b border-steel pb-6">
+        <div className="flex items-center justify-between border-b border-steel px-6 pb-6 pt-6">
           <BrandMark />
           <button
             aria-label="Close navigation"
@@ -114,8 +127,8 @@ function Navbar() {
           </button>
         </div>
 
-        <nav className="mt-8 flex-1" aria-label="Mobile primary navigation">
-          <ul className="space-y-1">
+        <nav className="flex-1 overflow-y-auto px-6" aria-label="Mobile primary navigation">
+          <ul className="mt-8 space-y-1">
             {navigationItems.map((item) => (
               <li key={item.to}>
                 <Link
@@ -131,14 +144,14 @@ function Navbar() {
         </nav>
 
         <Button
-          className="mt-auto"
+          className="mx-6 mb-6 mt-auto"
           to="/register"
           onClick={() => setIsOpen(false)}
         >
           Register for an Event
         </Button>
       </aside>
-    </header>
+    </>
   )
 }
 

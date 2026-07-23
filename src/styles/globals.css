@@ -21,6 +21,8 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
 
   body {
@@ -37,6 +39,7 @@
 
   #root {
     min-height: 100vh;
+    overflow-x: hidden;
   }
 
   ::selection {
