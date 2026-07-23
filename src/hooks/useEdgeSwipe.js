@@ -1,7 +1,10 @@
 import { useEffect, useRef } from 'react'
 
 const EDGE_THRESHOLD = 30
-const MIN_SWIPE_DISTANCE = 60
+
+function getMinSwipeDistance() {
+  return Math.max(60, window.innerWidth * 0.25)
+}
 
 export default function useEdgeSwipe(onOpen, onClose, isOpen) {
   const startRef = useRef(null)
@@ -45,14 +48,17 @@ export default function useEdgeSwipe(onOpen, onClose, isOpen) {
 
       const touch = e.touches[0]
       const dx = touch.clientX - startRef.current.x
+      const absDx = Math.abs(dx)
       const dy = Math.abs(touch.clientY - startRef.current.y)
 
-      if (dy > Math.abs(dx) && Math.abs(dx) < 20) {
-        swipingRef.current = false
-        return
+      if (dy > absDx * 1.5) {
+        if (absDx < 30) {
+          swipingRef.current = false
+          return
+        }
       }
 
-      if (Math.abs(dx) > 10) {
+      if (absDx > 10) {
         e.preventDefault()
       }
     }
@@ -62,15 +68,16 @@ export default function useEdgeSwipe(onOpen, onClose, isOpen) {
 
       const touch = e.changedTouches[0]
       const dx = touch.clientX - startRef.current.x
+      const absDx = Math.abs(dx)
       const dy = Math.abs(touch.clientY - startRef.current.y)
+      const minSwipe = getMinSwipeDistance()
 
-      const isHorizontal =
-        Math.abs(dx) > dy * 1.5 || (Math.abs(dx) > MIN_SWIPE_DISTANCE && dy < 50)
+      const isHorizontal = absDx > dy * 1.5 || (absDx > minSwipe && dy < minSwipe * 0.5)
 
-      if (isHorizontal) {
-        if (dx < -MIN_SWIPE_DISTANCE && !isOpenRef.current) {
+      if (isHorizontal && absDx >= minSwipe) {
+        if (dx < 0 && !isOpenRef.current) {
           onOpenRef.current()
-        } else if (dx > MIN_SWIPE_DISTANCE && isOpenRef.current) {
+        } else if (dx > 0 && isOpenRef.current) {
           onCloseRef.current()
         }
       }

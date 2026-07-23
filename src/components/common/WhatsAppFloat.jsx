@@ -1,9 +1,9 @@
 import { FaWhatsapp } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
 
-function WhatsAppFloat() {
+function WhatsAppFloat({ visible = true }) {
   return (
-    <div className="group fixed bottom-6 right-6 z-[100]">
+    <div className={`group fixed bottom-6 right-6 z-[100] transition-all duration-500 ease-out ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'}`}>
       {/* Tooltip */}
       <div
         aria-hidden="true"
