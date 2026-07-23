@@ -1,14 +1,18 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FaBars, FaXmark } from 'react-icons/fa6'
 import { Link, NavLink } from 'react-router-dom'
 import { navigationItems } from '../../../data/platform'
 import BrandMark from '../../common/BrandMark'
 import Button from '../../common/Button'
+import useEdgeSwipe from '../../../hooks/useEdgeSwipe'
 
 function Navbar() {
   const [isOpen, setIsOpen]       = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const menuButtonRef             = useRef(null)
+  const openNav  = useCallback(() => setIsOpen(true),  [])
+  const closeNav = useCallback(() => setIsOpen(false), [])
+  useEdgeSwipe(openNav, closeNav, isOpen)
 
   useEffect(() => {
     const update = () => setIsScrolled(window.scrollY > 20)
@@ -127,7 +131,7 @@ function Navbar() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-6" aria-label="Mobile primary navigation">
+        <nav className="flex-1 overflow-y-auto px-6 [touch-action:pan-y]" aria-label="Mobile primary navigation">
           <ul className="mt-8 space-y-1">
             {navigationItems.map((item) => (
               <li key={item.to}>

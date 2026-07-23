@@ -1,0 +1,91 @@
+import { useEffect, useRef } from 'react'
+
+const EDGE_THRESHOLD = 30
+const MIN_SWIPE_DISTANCE = 60
+
+export default function useEdgeSwipe(onOpen, onClose, isOpen) {
+  const startRef = useRef(null)
+  const swipingRef = useRef(false)
+  const isOpenRef = useRef(isOpen)
+  const onOpenRef = useRef(onOpen)
+  const onCloseRef = useRef(onClose)
+
+  isOpenRef.current = isOpen
+  onOpenRef.current = onOpen
+  onCloseRef.current = onClose
+
+  useEffect(() => {
+    const isMobile = () => window.innerWidth < 1024
+
+    const handleTouchStart = (e) => {
+      if (!isMobile()) return
+
+      const touch = e.touches[0]
+      const x = touch.clientX
+      const y = touch.clientY
+      const w = window.innerWidth
+
+      if (!isOpenRef.current && w - x <= EDGE_THRESHOLD) {
+        swipingRef.current = true
+        startRef.current = { x, y }
+        return
+      }
+
+      if (isOpenRef.current && e.target.closest('#mobile-menu')) {
+        swipingRef.current = true
+        startRef.current = { x, y }
+        return
+      }
+
+      swipingRef.current = false
+    }
+
+    const handleTouchMove = (e) => {
+      if (!swipingRef.current) return
+
+      const touch = e.touches[0]
+      const dx = touch.clientX - startRef.current.x
+      const dy = Math.abs(touch.clientY - startRef.current.y)
+
+      if (dy > Math.abs(dx) && Math.abs(dx) < 20) {
+        swipingRef.current = false
+        return
+      }
+
+      if (Math.abs(dx) > 10) {
+        e.preventDefault()
+      }
+    }
+
+    const handleTouchEnd = (e) => {
+      if (!swipingRef.current) return
+
+      const touch = e.changedTouches[0]
+      const dx = touch.clientX - startRef.current.x
+      const dy = Math.abs(touch.clientY - startRef.current.y)
+
+      const isHorizontal =
+        Math.abs(dx) > dy * 1.5 || (Math.abs(dx) > MIN_SWIPE_DISTANCE && dy < 50)
+
+      if (isHorizontal) {
+        if (dx < -MIN_SWIPE_DISTANCE && !isOpenRef.current) {
+          onOpenRef.current()
+        } else if (dx > MIN_SWIPE_DISTANCE && isOpenRef.current) {
+          onCloseRef.current()
+        }
+      }
+
+      swipingRef.current = false
+    }
+
+    document.addEventListener('touchstart', handleTouchStart, { passive: true })
+    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+    document.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+    }
+  }, [])
+}
