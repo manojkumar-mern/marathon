@@ -244,7 +244,7 @@ function Hero() {
           type="button"
           onClick={handleScrollDown}
           aria-label="Scroll to next section"
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+          className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
         >
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30">
             Scroll
@@ -307,12 +307,12 @@ function Hero() {
             />
 
             {/* Animated stats */}
-            <div className="flex flex-wrap gap-x-6 gap-y-4 sm:gap-x-10 sm:gap-y-5">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:flex sm:flex-wrap sm:gap-x-10 sm:gap-y-5">
               {heroStats.map((stat, i) => (
                 <div key={stat.label}>
                   <p
                     ref={(el) => (statRefs.current[i] = el)}
-                    className="font-display text-3xl sm:text-4xl font-black italic text-volt sm:text-5xl"
+                    className="font-display text-3xl sm:text-4xl font-black italic tabular-nums text-volt sm:text-5xl"
                     style={{ textShadow: '0 0 30px rgba(250,204,21,0.35)' }}
                   >
                     0
