@@ -21,7 +21,7 @@ function Faq() {
             Everything you need to know before race day. Can't find what you're looking for?
           </p>
           <Link
-            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt"
+            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
             to="/faq"
           >
             View all FAQ <FaArrowRight aria-hidden="true" />
@@ -32,7 +32,7 @@ function Faq() {
         <div className="divide-y divide-steel border-y border-steel">
           {faqItems.map(([question, answer]) => (
             <details key={question} className="group py-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-ember">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-ember focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember rounded-lg">
                 {question}
                 <span
                   aria-hidden="true"

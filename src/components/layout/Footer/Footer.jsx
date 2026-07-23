@@ -54,7 +54,7 @@ function Footer() {
                   href={href}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="flex size-9 items-center justify-center rounded-full border border-steel text-muted transition-colors hover:border-ember/60 hover:text-ember"
+                  className="flex size-9 items-center justify-center rounded-full border border-steel text-muted transition-colors hover:border-ember/60 hover:text-ember focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
                   {createElement(Icon, { className: 'text-sm', 'aria-hidden': true })}
                 </a>
@@ -113,7 +113,7 @@ function Footer() {
               <li>
                 <a
                   href="mailto:hello@strideforge.in"
-                  className="transition-colors hover:text-sf-white"
+                  className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
                   hello@strideforge.in
                 </a>
@@ -121,7 +121,7 @@ function Footer() {
               <li>
                 <a
                   href="tel:+918000000000"
-                  className="transition-colors hover:text-sf-white"
+                  className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
                   +91 80000 00000
                 </a>
@@ -141,7 +141,7 @@ function Footer() {
           </p>
           <Link
             to="/contact"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-ember px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-ember-deep sm:mt-0 sm:shrink-0"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-ember px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-ember-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:mt-0 sm:shrink-0"
           >
             Get updates
           </Link>
@@ -156,7 +156,7 @@ function Footer() {
             {legalLinks.map((link) => (
               <Link
                 key={link.to}
-                className="text-xs text-muted-dim transition-colors hover:text-sf-white"
+                className="text-xs text-muted-dim transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 to={link.to}
               >
                 {link.label}

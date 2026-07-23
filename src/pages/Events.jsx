@@ -1,3 +1,4 @@
+import SEO from '../components/common/SEO'
 import { FaArrowRight, FaCalendarDays, FaClock, FaLocationDot } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../components/common/ScrollReveal'
@@ -14,6 +15,14 @@ function Events({ mode }) {
       ? 'A record of the routes, runners, and shared moments that define who we are.'
       : 'Thoughtfully designed endurance experiences for runners, teams, and communities.'
 
+  const seoDesc = {
+    all: 'Browse all STRIDEFORGE marathon and running events across India. Register for upcoming races in Chennai, Salem, and Bengaluru.',
+    upcoming: 'View upcoming STRIDEFORGE marathon events. Register early to secure your spot at our next race.',
+    past: 'Relive past STRIDEFORGE marathon events. Results, finisher lists, and race galleries from previous editions.',
+  }
+
+  const seoUrl = mode === 'upcoming' ? '/events/upcoming' : mode === 'past' ? '/events/past' : '/events'
+
   const filteredEvents =
     mode === 'past'
       ? events.filter((e) => e.status === 'Past')
@@ -23,6 +32,7 @@ function Events({ mode }) {
 
   return (
     <main className="bg-obsidian py-20 sm:py-28">
+      <SEO title={title} description={seoDesc[mode]} url={seoUrl} />
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
 
         <ScrollReveal>
@@ -39,7 +49,7 @@ function Events({ mode }) {
         </ScrollReveal>
 
         {/* Filter tabs */}
-        <div className="mt-10 flex gap-2">
+        <div className="mt-10 flex flex-wrap gap-2">
           {[
             { label: 'All Events',      to: '/events' },
             { label: 'Upcoming',        to: '/events/upcoming' },
@@ -48,13 +58,14 @@ function Events({ mode }) {
             <Link
               key={tab.to}
               to={tab.to}
-              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors ${
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${
                 (tab.to === '/events' && !mode)
                 || (tab.to === '/events/upcoming' && mode === 'upcoming')
                 || (tab.to === '/events/past' && mode === 'past')
                   ? 'bg-ember text-white'
                   : 'border border-steel text-muted hover:border-ember/40 hover:text-sf-white'
               }`}
+              aria-current={((tab.to === '/events' && !mode) || (tab.to === '/events/upcoming' && mode === 'upcoming') || (tab.to === '/events/past' && mode === 'past')) ? 'page' : undefined}
             >
               {tab.label}
             </Link>
@@ -65,7 +76,7 @@ function Events({ mode }) {
           <div className="mt-20 text-center">
             <p className="font-display text-4xl font-black italic text-sf-white/20">NO EVENTS YET.</p>
             <p className="mt-3 text-muted">Check back soon — new events are announced regularly.</p>
-            <Link className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-6 py-3 text-sm font-semibold text-white hover:bg-ember-deep" to="/events">
+            <Link className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-6 py-3 text-sm font-semibold text-white hover:bg-ember-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" to="/events">
               View all events <FaArrowRight aria-hidden="true" />
             </Link>
           </div>
@@ -80,8 +91,9 @@ function Events({ mode }) {
                 <div className="relative overflow-hidden">
                   <img
                     alt={`${event.title} — race event`}
-                    className="h-72 w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="h-52 sm:h-64 w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
+                    decoding="async"
                     src={event.image}
                   />
                   <span className="absolute left-5 top-5 rounded-full border border-ember/30 bg-obsidian/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ember backdrop-blur-sm">
@@ -116,13 +128,13 @@ function Events({ mode }) {
 
                   <div className="mt-6 flex items-center gap-4">
                     <Link
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt"
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
                       to={`/events/${event.id}`}
                     >
                       View details <FaArrowRight aria-hidden="true" />
                     </Link>
                     <Link
-                      className="rounded-full border border-steel px-4 py-2 text-xs font-semibold text-muted transition-colors hover:border-ember/40 hover:text-sf-white"
+                      className="rounded-full border border-steel px-4 py-2 text-xs font-semibold text-muted transition-colors hover:border-ember/40 hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
                       to={`/register?event=${event.id}`}
                     >
                       Register

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { BRAND } from '../../config/brand'
+// import logoSvg from '../../assets/images/logos/logo.svg'
+import logoSvg from "../../assets/images/logos/marathon-logo.png";
 
 function PageLoader({ onComplete }) {
   const rootRef = useRef(null)
@@ -33,28 +35,11 @@ function PageLoader({ onComplete }) {
     >
       {/* Logo + wordmark */}
       <div ref={textRef} className="mb-8 flex flex-col items-center gap-4">
-        <svg
-          fill="none"
-          viewBox="0 0 40 40"
-          xmlns="http://www.w3.org/2000/svg"
-          className="size-14"
-        >
-          <defs>
-            <linearGradient
-              id="plGrad"
-              gradientUnits="userSpaceOnUse"
-              x1="20"
-              x2="20"
-              y1="2"
-              y2="38"
-            >
-              <stop offset="0%" stopColor="#FACC15" />
-              <stop offset="100%" stopColor="#F97316" />
-            </linearGradient>
-          </defs>
-          <polygon fill="url(#plGrad)" points="20,2 38,36 2,36" />
-          <polygon fill="#080C10" fillOpacity="0.45" points="20,13 30,34 10,34" />
-        </svg>
+        <img
+          src={logoSvg}
+          alt="Kauvery Marathon runner logo"
+          className="h-20 w-auto object-contain"
+        />
 
         <p className="font-display text-2xl font-black italic tracking-[0.1em] text-sf-white">
           {BRAND.name}

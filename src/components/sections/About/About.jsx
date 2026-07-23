@@ -1,6 +1,7 @@
 import { FaArrowRight } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../../common/ScrollReveal'
+import { aboutRunner } from '../../../assets/images/index.js'
 
 const pillars = [
   {
@@ -20,21 +21,20 @@ const pillars = [
   },
 ]
 
-const aboutImage =
-  'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?auto=format&fit=crop&w=900&q=85'
+const aboutImage = aboutRunner
 
 function About() {
   return (
-    <section className="bg-carbon py-24 sm:py-32" aria-label="About us">
-      <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20 lg:px-10">
+    <section className="bg-carbon py-16 sm:py-24 lg:py-32" aria-label="About us">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-2 lg:gap-20 lg:px-10">
 
         {/* Left: image with overlaid pull quote */}
         <ScrollReveal className="relative">
           <div className="relative overflow-hidden rounded-3xl">
             <img
-              alt="Elite athletes racing through a city course"
-              className="aspect-[4/5] w-full object-cover"
-              loading="lazy"
+              alt="Indian marathon runners racing through a city course at sunrise"
+              className="aspect-[3/2] sm:aspect-[4/5] w-full object-cover"
+              loading="eager"
               src={aboutImage}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/20 to-transparent" />
@@ -67,7 +67,7 @@ function About() {
             around the runners who've earned the right to be there.
           </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2">
+          <div className="mt-8 sm:mt-10 grid gap-5 sm:grid-cols-2">
             {pillars.map((pillar) => (
               <div key={pillar.title} className="border-t border-steel pt-5">
                 <h3 className="font-semibold text-sf-white">{pillar.title}</h3>
@@ -77,7 +77,7 @@ function About() {
           </div>
 
           <Link
-            className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt"
+            className="mt-10 inline-flex items-center gap-2 text-sm font-semibold text-ember transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
             to="/about"
           >
             Our full story <FaArrowRight aria-hidden="true" />

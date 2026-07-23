@@ -1,12 +1,10 @@
 import { useLayoutEffect, useRef, useState, useEffect } from 'react'
-import { FaArrowRight, FaCalendarDays, FaLocationDot, FaFlag } from 'react-icons/fa6'
+import { FaArrowRight, FaCalendarDays, FaLocationDot, FaFlag, FaChevronDown } from 'react-icons/fa6'
 import { gsap } from 'gsap'
-import { BRAND } from '../../../config/brand'
 import Button from '../../common/Button'
 
 /* ─── Hero assets ─────────────────────────────────────────────────── */
-const heroImage =
-  'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=2400&q=90'
+import heroImage from '../../../assets/images/hero/marathon-start.webp'
 
 /* ─── Next event info ─────────────────────────────────────────────── */
 const NEXT_EVENT = {
@@ -81,6 +79,8 @@ function CountdownSep() {
 
 /* ─── Hero ────────────────────────────────────────────────────────── */
 function Hero() {
+  const heroRef = useRef(null)
+  const nextRef = useRef(null)
   const contentRef = useRef(null)
   const statRefs   = useRef([])
   const countdown  = useCountdown(NEXT_EVENT.dateISO)
@@ -129,125 +129,162 @@ function Hero() {
     return () => observers.forEach(o => o?.disconnect())
   }, [])
 
+  /* Scroll to next section */
+  const handleScrollDown = () => {
+    nextRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
-    <section
-      aria-labelledby="hero-heading"
-      className="relative isolate overflow-hidden bg-obsidian"
-      style={{ minHeight: '100svh' }}
-    >
-      {/* ── Cinematic background ── */}
-      <img
-        alt="Thousands of marathon runners charging through city streets at dawn"
-        className="absolute inset-0 size-full object-cover object-[60%_20%]"
-        fetchPriority="high"
-        src={heroImage}
-      />
-
-      {/* ── Gradient overlays ── */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-obsidian via-obsidian/85 to-obsidian/20"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/30 to-transparent"
-      />
-      {/* Top fade so navbar blends */}
-      <div
-        aria-hidden="true"
-        style={{ height: '18%', background: 'linear-gradient(to bottom, rgba(8,12,16,0.55), transparent)' }}
-        className="absolute inset-x-0 top-0"
-      />
-
-      {/* ── Content ── */}
-      <div
-        ref={contentRef}
-        className="relative flex flex-col justify-end"
+    <>
+      {/* ── Hero (exactly 1 viewport) ──────────────────────────── */}
+      <section
+        ref={heroRef}
+        aria-labelledby="hero-heading"
+        className="relative isolate overflow-hidden bg-obsidian"
         style={{ minHeight: '100svh' }}
       >
-        <div className="mx-auto w-full max-w-7xl px-5 pb-20 pt-36 sm:px-8 sm:pb-28 lg:px-10 lg:pb-32">
+        {/* ── Cinematic background ── */}
+        <img
+          alt="Thousands of marathon runners at the start line on Marina Beach, Chennai at golden hour sunrise"
+          className="absolute inset-0 size-full object-cover object-[50%_60%]"
+          fetchPriority="high"
+          src={heroImage}
+        />
 
-          {/* Season eyebrow chip */}
-          <p
-            data-hero-item
-            className="inline-flex items-center gap-2 rounded-full border border-ember/30 bg-ember/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-ember backdrop-blur-sm"
-          >
-            <span aria-hidden="true" className="size-1.5 rounded-full bg-ember animate-pulse" />
-            {BRAND.name} · 2027 Season
-          </p>
+        {/* ── Gradient overlays ── */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-r from-obsidian via-obsidian/85 to-obsidian/20"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/30 to-transparent"
+        />
+        <div
+          aria-hidden="true"
+          style={{ height: '18%', background: 'linear-gradient(to bottom, rgba(8,12,16,0.55), transparent)' }}
+          className="absolute inset-x-0 top-0"
+        />
 
-          {/* Main headline */}
-          <h1
-            id="hero-heading"
-            data-hero-item
-            className="mt-5 font-display font-black italic leading-[0.88] tracking-tight text-sf-white"
-            style={{ fontSize: 'clamp(3.2rem, 10vw, 9rem)' }}
-          >
-            ONE ROAD.
-            <br />
-            <span className="ember-gradient-text">THOUSANDS</span>
-            <br />
-            OF STORIES.
-          </h1>
+        {/* ── Content ── */}
+        <div
+          ref={contentRef}
+          className="relative flex flex-col"
+          style={{ minHeight: '100svh' }}
+        >
+          <div className="mx-auto w-full max-w-7xl px-5 pb-12 pt-28 sm:px-8 sm:pb-16 lg:px-10 lg:pb-20">
 
-          {/* Sub-copy */}
-          <p
-            data-hero-item
-            className="mt-6 max-w-lg text-base leading-7 text-muted sm:text-lg"
-          >
-            India's premium marathon event series.{' '}
-            <span className="text-sf-white/75">Run the city. Feel the crowd. Earn the medal.</span>
-          </p>
+            <h1
+              id="hero-heading"
+              data-hero-item
+              className="font-display font-black italic leading-[0.88] tracking-tight text-sf-white"
+              style={{ fontSize: 'clamp(2.2rem, 8vw, 7.75rem)' }}
+            >
+              ONE ROAD.
+              <br />
+              <span className="ember-gradient-text">THOUSANDS</span>
+              <br />
+              OF STORIES.
+            </h1>
 
-          {/* Event info row */}
-          <div
-            data-hero-item
-            className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2"
-          >
-            <span className="flex items-center gap-1.5 text-sm text-sf-white/80">
-              <FaCalendarDays className="text-ember text-xs" />
-              {NEXT_EVENT.date}
-            </span>
-            <span className="h-3 w-px bg-white/20 hidden sm:block" aria-hidden="true" />
-            <span className="flex items-center gap-1.5 text-sm text-sf-white/80">
-              <FaLocationDot className="text-ember text-xs" />
-              {NEXT_EVENT.location}
-            </span>
-            <span className="h-3 w-px bg-white/20 hidden sm:block" aria-hidden="true" />
-            <span className="flex items-center gap-1.5 text-sm text-amber-400/90">
-              <FaFlag className="text-xs" />
-              Reg. closes {NEXT_EVENT.regDeadline}
-            </span>
-          </div>
+            <p
+              data-hero-item
+              className="mt-4 max-w-lg text-base leading-6 text-muted sm:text-lg sm:leading-7"
+            >
+              India's premium marathon event series.{' '}
+              <span className="text-sf-white/75">Run the city. Feel the crowd. Earn the medal.</span>
+            </p>
 
-          {/* Race category pills */}
-          <div data-hero-item className="mt-4 flex flex-wrap gap-2">
-            {NEXT_EVENT.categories.map((cat) => (
-              <span
-                key={cat}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-sf-white/70 backdrop-blur-sm"
-              >
-                {cat}
+            <div
+              data-hero-item
+              className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5"
+            >
+              <span className="flex items-center gap-1.5 text-sm text-sf-white/80">
+                <FaCalendarDays className="text-ember text-xs" />
+                {NEXT_EVENT.date}
               </span>
-            ))}
-          </div>
+              <span className="h-3 w-px bg-white/20 hidden sm:block" aria-hidden="true" />
+              <span className="flex items-center gap-1.5 text-sm text-sf-white/80">
+                <FaLocationDot className="text-ember text-xs" />
+                {NEXT_EVENT.location}
+              </span>
+              <span className="h-3 w-px bg-white/20 hidden sm:block" aria-hidden="true" />
+              <span className="flex items-center gap-1.5 text-sm text-amber-400/90">
+                <FaFlag className="text-xs" />
+                Reg. closes {NEXT_EVENT.regDeadline}
+              </span>
+            </div>
 
-          {/* CTA buttons */}
-          <div data-hero-item className="mt-8 flex flex-wrap gap-4">
-            <Button to="/register">
-              Register Now{' '}
-              <FaArrowRight aria-hidden="true" className="text-xs" />
-            </Button>
-            <Button to="/events" variant="ghost">
-              Explore Events
-            </Button>
-          </div>
+            <div data-hero-item className="mt-3 flex flex-wrap gap-2">
+              {NEXT_EVENT.categories.map((cat) => (
+                <span
+                  key={cat}
+                  className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-sf-white/70 backdrop-blur-sm"
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
 
-          {/* Countdown + Animated Stats */}
-          <div
-            data-hero-item
-            className="mt-14 flex flex-col gap-8 border-t border-white/10 pt-8 sm:flex-row sm:items-start sm:justify-between"
-          >
+            <div data-hero-item className="mt-6 flex flex-wrap gap-4">
+              <Button to="/register">
+                Register Now{' '}
+                <FaArrowRight aria-hidden="true" className="text-xs" />
+              </Button>
+              <Button to="/events" variant="ghost">
+                Explore Events
+              </Button>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ── Animated scroll indicator ── */}
+        <button
+          type="button"
+          onClick={handleScrollDown}
+          aria-label="Scroll to next section"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+        >
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30">
+            Scroll
+          </span>
+          <div className="relative h-8 w-px overflow-hidden rounded-full bg-white/10">
+            <div
+              className="absolute left-0 top-0 w-full rounded-full bg-ember/50"
+              style={{
+                height: '40%',
+                animation: 'heroScrollBounce 1.6s ease-in-out infinite',
+              }}
+            />
+          </div>
+          <FaChevronDown
+            aria-hidden="true"
+            className="text-ember/50 -mt-1"
+            style={{ animation: 'heroChevronBounce 1.6s ease-in-out infinite' }}
+          />
+        </button>
+
+        <style>{`
+          @keyframes heroScrollBounce {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(6px); }
+          }
+          @keyframes heroChevronBounce {
+            0%, 100% { transform: translateY(0); }
+            50%      { transform: translateY(4px); }
+          }
+        `}</style>
+      </section>
+
+      {/* ── Next Event Countdown + Stats ───────────────────────── */}
+      <section
+        ref={nextRef}
+        aria-label="Next event countdown and statistics"
+        className="bg-obsidian"
+      >
+        <div className="mx-auto w-full max-w-7xl px-5 pt-8 pb-16 sm:px-8 sm:pt-12 sm:pb-20 lg:px-10 lg:pt-14 lg:pb-24">
+          <div className="flex flex-col gap-4 border-t border-white/10 pt-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6 sm:pt-6">
             {/* Countdown block */}
             <div>
               <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted">
@@ -264,19 +301,18 @@ function Hero() {
               </div>
             </div>
 
-            {/* Vertical divider */}
             <div
               aria-hidden="true"
               className="hidden sm:block w-px self-stretch bg-white/10"
             />
 
             {/* Animated stats */}
-            <div className="flex flex-wrap gap-x-10 gap-y-5">
+            <div className="flex flex-wrap gap-x-6 gap-y-4 sm:gap-x-10 sm:gap-y-5">
               {heroStats.map((stat, i) => (
                 <div key={stat.label}>
                   <p
                     ref={(el) => (statRefs.current[i] = el)}
-                    className="font-display text-4xl font-black italic text-volt sm:text-5xl"
+                    className="font-display text-3xl sm:text-4xl font-black italic text-volt sm:text-5xl"
                     style={{ textShadow: '0 0 30px rgba(250,204,21,0.35)' }}
                   >
                     0
@@ -288,39 +324,9 @@ function Hero() {
               ))}
             </div>
           </div>
-
         </div>
-      </div>
-
-      {/* ── Animated scroll indicator ── */}
-      <div
-        aria-hidden="true"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
-      >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/25">
-          Scroll
-        </span>
-        <div className="relative h-10 w-px overflow-hidden rounded-full bg-white/10">
-          <div
-            className="absolute left-0 top-0 w-full rounded-full bg-ember/60"
-            style={{
-              height: '40%',
-              animation: 'heroScrollDrop 1.6s ease-in-out infinite',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Keyframe for scroll drop */}
-      <style>{`
-        @keyframes heroScrollDrop {
-          0%   { transform: translateY(-100%); opacity: 0; }
-          20%  { opacity: 1; }
-          80%  { opacity: 1; }
-          100% { transform: translateY(280%); opacity: 0; }
-        }
-      `}</style>
-    </section>
+      </section>
+    </>
   )
 }
 

@@ -1,7 +1,16 @@
-﻿import { FaArrowRight, FaCalendarDays, FaLocationDot, FaClock, FaRoute, FaFlag, FaMapPin } from "react-icons/fa6"
+import { FaArrowRight, FaCalendarDays, FaLocationDot, FaClock, FaRoute, FaFlag, FaMapPin, FaEnvelope, FaPhone, FaTrophy } from "react-icons/fa6"
 import { Link, useParams } from "react-router-dom"
 import Button from "../components/common/Button"
+import SEO from "../components/common/SEO"
 import { events, raceCategories } from "../data/platform"
+
+function getMapUrl(location) {
+  return `https://maps.google.com/maps?q=${encodeURIComponent(location)}&t=&z=14&ie=UTF8&iwloc=&output=embed`
+}
+
+function getMapLink(location) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(location)}`
+}
 
 function EventDetails() {
   const { id } = useParams()
@@ -10,11 +19,12 @@ function EventDetails() {
   if (!event) {
     return (
       <main className="grid min-h-[70vh] place-items-center bg-obsidian px-5 text-center">
+        <SEO title="Event Not Found" url="/events" />
         <div>
           <p className="font-display text-8xl font-black italic ember-gradient-text">404</p>
           <h1 className="mt-4 font-display text-3xl font-black italic text-sf-white">EVENT NOT FOUND.</h1>
           <p className="mt-3 text-muted">This event may have ended or the link is incorrect.</p>
-          <Link className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-3 text-sm font-semibold text-white hover:bg-ember-deep transition-all hover:-translate-y-0.5" to="/events">
+          <Link className="mt-8 inline-flex items-center gap-2 rounded-full bg-ember px-8 py-3 text-sm font-semibold text-white hover:bg-ember-deep transition-all hover:-translate-y-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" to="/events">
             View all events
           </Link>
         </div>
@@ -31,19 +41,31 @@ function EventDetails() {
 
   return (
     <main className="bg-obsidian">
+      <SEO
+        title={event.title}
+        description={event.description?.slice(0, 160)}
+        image={event.image}
+        url={`/events/${event.id}`}
+      />
       {/* Hero */}
-      <div className="relative min-h-[60vh] overflow-hidden">
-        <img alt={`${event.title} marathon event`} className="absolute inset-0 size-full object-cover" src={event.image} />
+      <div className="relative min-h-[50vh] sm:min-h-[60vh] overflow-hidden">
+        <img
+          alt={`${event.title} marathon event`}
+          className="absolute inset-0 size-full object-cover"
+          src={event.image}
+          loading="lazy"
+          decoding="async"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/60 to-transparent" />
-        <div className="relative flex min-h-[60vh] flex-col justify-end px-5 py-14 sm:px-8 lg:px-10">
+        <div className="relative flex min-h-[50vh] sm:min-h-[60vh] flex-col justify-end px-5 py-10 sm:py-14 sm:px-8 lg:px-10">
           <div className="mx-auto w-full max-w-7xl">
             <span className="inline-flex rounded-full border border-ember/30 bg-obsidian/70 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-ember backdrop-blur-sm">
               {event.status}
             </span>
-            <h1 className="mt-4 font-display text-5xl font-black italic leading-none tracking-tight text-sf-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 font-display text-4xl font-black italic leading-none tracking-tight text-sf-white sm:text-5xl lg:text-7xl">
               {event.title.toUpperCase()}
             </h1>
-            <div className="mt-5 flex flex-wrap gap-5 text-sm font-medium text-sf-white/70">
+            <div className="mt-4 sm:mt-5 flex flex-wrap gap-3 sm:gap-5 text-xs sm:text-sm font-medium text-sf-white/70">
               <span className="flex items-center gap-2"><FaCalendarDays className="text-ember" aria-hidden="true" />{event.date}</span>
               <span className="flex items-center gap-2"><FaLocationDot className="text-ember" aria-hidden="true" />{event.location}</span>
               <span className="flex items-center gap-2"><FaClock className="text-ember" aria-hidden="true" />Start {event.startTime}</span>
@@ -111,11 +133,24 @@ function EventDetails() {
                     </div>
                   </div>
                 )}
-                <div className="mt-5 flex min-h-[200px] items-center justify-center overflow-hidden rounded-2xl border border-steel bg-carbon">
-                  <div className="text-center text-muted">
-                    <FaMapPin className="mx-auto mb-3 text-3xl text-ember/40" aria-hidden="true" />
-                    <p className="text-sm font-medium">Interactive map coming soon</p>
-                    <p className="mt-1 text-xs text-muted-dim">{event.venue ?? event.location}</p>
+                <div className="mt-5 overflow-hidden rounded-2xl border border-steel">
+                  <iframe
+                    title={`Map of ${event.venue ?? event.location}`}
+                    src={getMapUrl(event.venue ?? event.location)}
+                    className="h-[250px] w-full sm:h-[300px]"
+                    style={{ filter: 'invert(0.9) hue-rotate(180deg) saturate(0.5)' }}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                  <div className="border-t border-steel bg-carbon px-5 py-3">
+                    <a
+                      href={getMapLink(event.venue ?? event.location)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-xs font-semibold text-ember transition-colors hover:text-ember-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
+                    >
+                      <FaMapPin aria-hidden="true" />View Larger Map
+                    </a>
                   </div>
                 </div>
               </section>
@@ -139,6 +174,99 @@ function EventDetails() {
               </section>
             )}
 
+            {/* Race Kit */}
+            {event.raceKit && (
+              <section aria-label="Race kit">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />Kit
+                </p>
+                <h2 className="mt-4 font-display text-3xl font-black italic text-sf-white">RACE KIT</h2>
+                <p className="mt-3 text-sm text-muted">Every registered participant receives the following items:</p>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {event.raceKit.map((item) => (
+                    <div key={item} className="flex items-start gap-3 rounded-2xl border border-steel bg-carbon p-5">
+                      <span className="mt-0.5 size-1.5 shrink-0 rounded-full bg-volt" aria-hidden="true" />
+                      <span className="text-sm leading-6 text-muted">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Rules */}
+            {event.rules && (
+              <section aria-label="Race rules">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />Rules
+                </p>
+                <h2 className="mt-4 font-display text-3xl font-black italic text-sf-white">RACE RULES</h2>
+                <div className="mt-7 space-y-4">
+                  {event.rules.map((rule, i) => (
+                    <div key={i} className="flex items-start gap-3 rounded-2xl border border-steel bg-carbon p-5">
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ember/15 text-xs font-bold text-ember">{i + 1}</span>
+                      <span className="mt-0.5 text-sm leading-6 text-muted">{rule}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Rewards */}
+            <section aria-label="Race rewards">
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
+                <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />Rewards
+              </p>
+              <h2 className="mt-4 font-display text-3xl font-black italic text-sf-white">WHAT AWAITS YOU</h2>
+              {event.rewards && event.rewards.length > 0 ? (
+                <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                  {event.rewards.map((reward) => (
+                    <div key={reward.position} className="group relative rounded-2xl border border-steel bg-carbon p-5 transition-all duration-300 hover:-translate-y-1 hover:border-ember/30 hover:shadow-lg hover:shadow-ember/5">
+                      <div className="flex items-start gap-4">
+                        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ember/10 text-ember transition-all duration-300 group-hover:bg-ember/20 group-hover:scale-110">
+                          <FaTrophy aria-hidden="true" className="text-base" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold uppercase tracking-widest text-ember">{reward.position}</p>
+                          <p className="mt-2 text-sm leading-6 text-muted">{reward.prize}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-7 rounded-2xl border border-steel bg-carbon p-8 text-center">
+                  <FaTrophy className="mx-auto mb-3 text-2xl text-ember/30" aria-hidden="true" />
+                  <p className="text-sm font-medium text-muted">Rewards will be announced soon.</p>
+                </div>
+              )}
+            </section>
+
+            {/* Organizer */}
+            {event.organizer && (
+              <section aria-label="Organizer information">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
+                  <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />Organizer
+                </p>
+                <h2 className="mt-4 font-display text-3xl font-black italic text-sf-white">ORGANIZED BY</h2>
+                <div className="mt-7 rounded-3xl border border-steel bg-carbon p-6 sm:p-8">
+                  <p className="font-semibold text-sf-white">{event.organizer.name}</p>
+                  <p className="mt-1.5 text-sm leading-6 text-muted">{event.organizer.registeredOffice}</p>
+                  <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2">
+                    {event.organizer.contactEmail && (
+                      <a href={`mailto:${event.organizer.contactEmail}`} className="flex items-center gap-2 text-xs font-medium text-ember transition-colors hover:text-ember-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">
+                        <FaEnvelope aria-hidden="true" />{event.organizer.contactEmail}
+                      </a>
+                    )}
+                    {event.organizer.contactPhone && (
+                      <a href={`tel:${event.organizer.contactPhone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-2 text-xs font-medium text-ember transition-colors hover:text-ember-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">
+                        <FaPhone aria-hidden="true" />{event.organizer.contactPhone}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* FAQ */}
             <section aria-label="Event FAQ">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
@@ -148,7 +276,7 @@ function EventDetails() {
               <div className="mt-7 divide-y divide-steel border-y border-steel">
                 {eventFaq.map(([q, a]) => (
                   <details key={q} className="group py-5">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-ember">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-ember focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember rounded-lg">
                       {q}
                       <span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-full border border-steel text-lg text-ember transition-all duration-300 group-open:rotate-45 group-open:border-ember/50 group-open:bg-ember/10">+</span>
                     </summary>
@@ -184,7 +312,7 @@ function EventDetails() {
                 <p>First start: <span className="font-semibold text-sf-white">{event.startTime}</span></p>
               </div>
               <Button className="mt-7 w-full justify-center" to={`/register?event=${event.id}`}>Register for this event</Button>
-              <Link to="/contact" className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted hover:text-ember transition-colors">
+              <Link to="/contact" className="mt-4 flex items-center justify-center gap-1.5 text-xs text-muted hover:text-ember transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">
                 Have questions? <FaArrowRight className="text-[10px]" aria-hidden="true" />
               </Link>
             </div>

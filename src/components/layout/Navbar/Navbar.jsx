@@ -106,7 +106,7 @@ function Navbar() {
           <BrandMark />
           <button
             aria-label="Close navigation"
-            className="grid size-10 place-items-center rounded-full border border-steel text-sf-white hover:border-steel-light"
+            className="grid size-10 place-items-center rounded-full border border-steel text-sf-white hover:border-steel-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
             type="button"
             onClick={() => setIsOpen(false)}
           >
@@ -119,7 +119,7 @@ function Navbar() {
             {navigationItems.map((item) => (
               <li key={item.to}>
                 <Link
-                  className="block rounded-xl px-4 py-3.5 text-lg font-medium text-sf-white/80 transition-colors hover:bg-steel hover:text-sf-white"
+                  className="block rounded-xl px-4 py-3.5 text-lg font-medium text-sf-white/80 transition-colors hover:bg-steel hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                   to={item.to}
                   onClick={() => setIsOpen(false)}
                 >

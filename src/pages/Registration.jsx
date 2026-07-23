@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { createElement, useCallback, useMemo, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   FaCheck, FaChevronLeft, FaChevronRight,
   FaCreditCard, FaDownload, FaMobile,
   FaShare, FaSpinner, FaLandmark, FaWallet,
 } from 'react-icons/fa6'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import SEO from '../components/common/SEO'
 import { BRAND } from '../config/brand'
 import { events, raceCategories } from '../data/platform'
 
@@ -49,46 +50,64 @@ function FieldError({ msg }) {
 function validateStep(step, form, pm) {
   const e = {}
   if (step === 2) {
-    if (!form.firstName.trim()) e.firstName = 'First name is required'
-    if (!form.lastName.trim())  e.lastName  = 'Last name is required'
-    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = 'Valid email is required'
-    if (form.phone.replace(/\D/g,'').length < 10) e.phone = 'Valid 10-digit mobile is required'
-    if (!form.dob)    e.dob    = 'Date of birth is required'
-    if (!form.gender) e.gender = 'Please select your gender'
+    if (!form.firstName.trim()) e.firstName = 'Enter your first name as it appears on ID'
+    if (!form.lastName.trim())  e.lastName  = 'Enter your last name as it appears on ID'
+    if (!form.email.trim() || !/\S+@\S+\.\S+/.test(form.email)) e.email = 'Enter a valid email address (e.g., name@domain.com)'
+    if (form.phone.replace(/\D/g,'').length < 10) e.phone = 'Enter a valid 10-digit mobile number'
+    if (!form.dob)    e.dob    = 'Select your date of birth'
+    if (!form.gender) e.gender = 'Select your gender'
   }
   if (step === 3) {
-    if (!form.emergencyName.trim())     e.emergencyName     = 'Contact name is required'
-    if (!form.emergencyRelation.trim()) e.emergencyRelation = 'Relationship is required'
-    if (form.emergencyPhone.replace(/\D/g,'').length < 10) e.emergencyPhone = 'Valid 10-digit phone is required'
+    if (!form.emergencyName.trim())     e.emergencyName     = 'Enter the name of your emergency contact'
+    if (!form.emergencyRelation.trim()) e.emergencyRelation = 'Select your relationship to the contact'
+    if (form.emergencyPhone.replace(/\D/g,'').length < 10) e.emergencyPhone = 'Enter a valid 10-digit phone number for your contact'
   }
   if (step === 6) {
-    if (pm === 'UPI' && !form.upiId.trim()) e.upiId = 'Please enter your UPI ID'
-    if (pm === 'NetBanking' && !form.selectedBank) e.selectedBank = 'Please select a bank'
+    if (pm === 'UPI') {
+      if (!form.upiId.trim()) e.upiId = 'Enter your UPI ID (e.g., name@bank)'
+    }
+    if (pm === 'Card') {
+      if (!form.cardName.trim()) e.cardName = 'Enter the name on your card'
+      if (!form.cardNumber.trim()) e.cardNumber = 'Enter your card number'
+      if (!form.cardExpiry.trim()) e.cardExpiry = 'Enter the expiry date (MM/YY)'
+      if (!form.cardCvv.trim()) e.cardCvv = 'Enter the CVV on the back of your card'
+    }
+    if (pm === 'NetBanking') {
+      if (!form.selectedBank) e.selectedBank = 'Select your bank from the list'
+    }
+    if (pm === 'Wallet') {
+      if (!form.selectedWallet) e.selectedWallet = 'Select your wallet'
+    }
   }
   return e
 }
 
 function Registration() {
+  const [searchParams] = useSearchParams()
   const [step,setStep]               = useState(0)
   const [errors,setErrors]           = useState({})
   const [processing,setProcessing]   = useState(false)
   const [couponApplied,setCouponApplied] = useState(false)
   const [paymentMethod,setPaymentMethod] = useState('UPI')
-  const [form,setForm] = useState({
-    eventId:           events[0].id,
-    categoryId:        raceCategories[1]?.id ?? raceCategories[0].id,
-    firstName:'', lastName:'', email:'', phone:'', dob:'', gender:'', city:'', pincode:'',
-    emergencyName:'', emergencyRelation:'', emergencyPhone:'', bloodGroup:'', medical:'',
-    shirt:'M', upiId:'', selectedBank:'', selectedWallet:'',
-    cardName:'', cardNumber:'', cardExpiry:'', cardCvv:'', couponCode:'',
+  const [form,setForm] = useState(() => {
+    const urlEventId = searchParams.get('event')
+    const initialEventId = events.find(e => e.id === urlEventId)?.id ?? events[0].id
+    return {
+      eventId:           initialEventId,
+      categoryId:        raceCategories[1]?.id ?? raceCategories[0].id,
+      firstName:'', lastName:'', email:'', phone:'', dob:'', gender:'', city:'', pincode:'',
+      emergencyName:'', emergencyRelation:'', emergencyPhone:'', bloodGroup:'', medical:'',
+      shirt:'M', upiId:'', selectedBank:'', selectedWallet:'',
+      cardName:'', cardNumber:'', cardExpiry:'', cardCvv:'', couponCode:'',
+    }
   })
-  const upd = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
-  const sf  = (k,v) => setForm((f) => ({ ...f, [k]: v }))
-  const fi  = (name) => ({ name, value: form[name], onChange: upd, className: errors[name] ? iECls : iCls })
+  const upd = useCallback((e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value })), [])
+  const sf  = useCallback((k,v) => setForm((f) => ({ ...f, [k]: v })), [])
+  const fi  = useCallback((name) => ({ name, value: form[name], onChange: upd, className: errors[name] ? iECls : iCls, id: `f-${name}`, 'aria-invalid': !!errors[name] || undefined }), [form, errors, upd])
 
-  const selEvent = events.find((e) => e.id === form.eventId)
-  const selCat   = raceCategories.find((c) => c.id === form.categoryId)
-  const fullName = [form.firstName, form.lastName].filter(Boolean).join(' ') || 'Runner'
+  const selEvent = useMemo(() => events.find((e) => e.id === form.eventId), [form.eventId])
+  const selCat   = useMemo(() => raceCategories.find((c) => c.id === form.categoryId), [form.categoryId])
+  const fullName = useMemo(() => [form.firstName, form.lastName].filter(Boolean).join(' ') || 'Runner', [form.firstName, form.lastName])
 
   const registrationId = useMemo(() => {
     const seed = (form.firstName.length + form.lastName.length + form.email.length + 1) * 317 + 10000
@@ -100,24 +119,25 @@ function Registration() {
     return String(n)
   }, [form.firstName, form.email])
 
-  const basePrice = Number((selCat?.price ?? '799').replace(/[^0-9]/g,''))
-  const discount  = couponApplied ? Math.round(basePrice*0.1) : 0
-  const subtotal  = basePrice - discount
-  const tax       = Math.round(subtotal*0.18)
-  const total     = subtotal + tax
+  const basePrice = useMemo(() => Number((selCat?.price ?? '799').replace(/[^0-9]/g,'')), [selCat?.price])
+  const discount  = useMemo(() => couponApplied ? Math.round(basePrice*0.1) : 0, [couponApplied, basePrice])
+  const subtotal  = useMemo(() => basePrice - discount, [basePrice, discount])
+  const tax       = useMemo(() => Math.round(subtotal*0.18), [subtotal])
+  const total     = useMemo(() => subtotal + tax, [subtotal, tax])
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     const errs = validateStep(step, form, paymentMethod)
     if (Object.keys(errs).length > 0) { setErrors(errs); window.scrollTo({top:0,behavior:'smooth'}); return }
     setErrors({})
     if (step === 6) { setProcessing(true); setTimeout(()=>{ setProcessing(false); setStep(7) }, 2400); return }
     setStep((s) => Math.min(s+1, STEPS.length-1))
     window.scrollTo({top:0,behavior:'smooth'})
-  }
-  const handleBack = () => { setErrors({}); setStep((s)=>Math.max(s-1,0)); window.scrollTo({top:0,behavior:'smooth'}) }
+  }, [step, form, paymentMethod])
+  const handleBack = useCallback(() => { setErrors({}); setStep((s)=>Math.max(s-1,0)); window.scrollTo({top:0,behavior:'smooth'}) }, [])
 
   return (
     <main className="min-h-screen bg-obsidian py-14 sm:py-20">
+      <SEO title="Register" description="Register for STRIDEFORGE marathon events. Choose your event, category, and complete secure checkout." url="/register" />
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
 
         {/* Header */}
@@ -433,15 +453,15 @@ function Registration() {
                 <div>
                   <p className="text-sm font-medium text-muted">Payment method</p>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    {PAYMENT_METHODS.map(({id,label,sub,Icon})=>(
-                      <label key={id} className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-all ${paymentMethod===id?'border-ember bg-ember/10':'border-steel hover:border-steel-light'}`}>
-                        <input type="radio" className="sr-only" checked={paymentMethod===id} onChange={()=>setPaymentMethod(id)}/>
-                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${paymentMethod===id?'bg-ember/20':'bg-steel'}`}>
-                          <Icon className={`text-base ${paymentMethod===id?'text-ember':'text-muted'}`} aria-hidden="true"/>
+                    {PAYMENT_METHODS.map((method) => (
+                      <label key={method.id} className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition-all ${paymentMethod===method.id?'border-ember bg-ember/10':'border-steel hover:border-steel-light'}`}>
+                        <input type="radio" className="sr-only" checked={paymentMethod===method.id} onChange={()=>setPaymentMethod(method.id)}/>
+                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${paymentMethod===method.id?'bg-ember/20':'bg-steel'}`}>
+                          {createElement(method.Icon, { className: `text-base ${paymentMethod===method.id?'text-ember':'text-muted'}`, 'aria-hidden': true })}
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-sf-white">{label}</p>
-                          <p className="text-xs text-muted">{sub}</p>
+                          <p className="text-sm font-semibold text-sf-white">{method.label}</p>
+                          <p className="text-xs text-muted">{method.sub}</p>
                         </div>
                       </label>
                     ))}
@@ -458,17 +478,21 @@ function Registration() {
                   {paymentMethod==='Card' && (
                     <div className="mt-6 space-y-4">
                       <label className={lCls}>Cardholder name
-                        <input name="cardName" value={form.cardName} onChange={upd} className={iCls} placeholder="ARUN KUMAR"/>
+                        <input name="cardName" value={form.cardName} onChange={upd} className={errors.cardName?iECls:iCls} placeholder="ARUN KUMAR"/>
+                        <FieldError msg={errors.cardName}/>
                       </label>
                       <label className={lCls}>Card number
-                        <input name="cardNumber" value={form.cardNumber} onChange={upd} className={iCls} placeholder="4242 4242 4242 4242" maxLength={19}/>
+                        <input name="cardNumber" value={form.cardNumber} onChange={upd} className={errors.cardNumber?iECls:iCls} placeholder="4242 4242 4242 4242" maxLength={19}/>
+                        <FieldError msg={errors.cardNumber}/>
                       </label>
                       <div className="grid grid-cols-2 gap-4">
                         <label className={lCls}>Expiry
-                          <input name="cardExpiry" value={form.cardExpiry} onChange={upd} className={iCls} placeholder="MM / YY" maxLength={7}/>
+                          <input name="cardExpiry" value={form.cardExpiry} onChange={upd} className={errors.cardExpiry?iECls:iCls} placeholder="MM / YY" maxLength={7}/>
+                          <FieldError msg={errors.cardExpiry}/>
                         </label>
                         <label className={lCls}>CVV
-                          <input name="cardCvv" value={form.cardCvv} onChange={upd} className={iCls} placeholder="..." maxLength={4} type="password"/>
+                          <input name="cardCvv" value={form.cardCvv} onChange={upd} className={errors.cardCvv?iECls:iCls} placeholder="..." maxLength={4} type="password"/>
+                          <FieldError msg={errors.cardCvv}/>
                         </label>
                       </div>
                     </div>
@@ -486,8 +510,8 @@ function Registration() {
                   )}
                   {paymentMethod==='Wallet' && (
                     <div className="mt-6">
-                      <p className="text-sm font-medium text-muted">Select wallet</p>
-                      <div className="mt-3 flex flex-wrap gap-3">
+                      <p className="text-sm font-medium text-muted">Select wallet <span className="text-ember">*</span></p>
+                      <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label="Select wallet">
                         {WALLETS.map((w)=>(
                           <button key={w} type="button" onClick={()=>sf('selectedWallet',w)}
                             className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${form.selectedWallet===w?'border-ember bg-ember/10 text-ember':'border-steel text-muted hover:border-ember/40 hover:text-sf-white'}`}>
@@ -495,6 +519,7 @@ function Registration() {
                           </button>
                         ))}
                       </div>
+                      <FieldError msg={errors.selectedWallet}/>
                     </div>
                   )}
                   <div className="mt-7">
@@ -604,17 +629,17 @@ function Registration() {
               </div>
               <div className="mt-8 flex flex-wrap justify-center gap-4">
                 <button type="button" onClick={()=>window.print()}
-                  className="inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-ember-deep hover:-translate-y-0.5 active:scale-95">
+                  className="inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-ember-deep hover:-translate-y-0.5 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                   <FaDownload aria-hidden="true"/> Download ticket
                 </button>
                 <button type="button" onClick={()=>{ if(navigator.share) navigator.share({title:`${BRAND.name} - ${selEvent?.title}`,text:`I am registered! Bib ${bibNumber}. See you at the start line.`}) }}
-                  className="inline-flex items-center gap-2 rounded-full border border-steel px-7 py-3 text-sm font-semibold text-muted transition-all hover:border-ember/40 hover:text-sf-white">
+                  className="inline-flex items-center gap-2 rounded-full border border-steel px-7 py-3 text-sm font-semibold text-muted transition-all hover:border-ember/40 hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">
                   <FaShare aria-hidden="true"/> Share
                 </button>
               </div>
               <div className="mt-6 flex flex-wrap justify-center gap-6">
-                <Link to="/dashboard" className="text-sm font-semibold text-ember transition-colors hover:text-volt">View in dashboard</Link>
-                <Link to="/events" className="text-sm text-muted transition-colors hover:text-sf-white">Browse more events</Link>
+                <Link to="/dashboard" className="text-sm font-semibold text-ember transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">View in dashboard</Link>
+                <Link to="/events" className="text-sm text-muted transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">Browse more events</Link>
               </div>
               <p className="mt-8 text-center text-xs text-muted-dim">
                 Confirmation sent to <span className="text-sf-white">{form.email||'your email'}</span>. Check your inbox.
@@ -626,11 +651,11 @@ function Registration() {
           {step<7 && !processing && (
             <div className="mt-10 flex items-center justify-between border-t border-steel pt-7">
               <button type="button" onClick={handleBack}
-                className={`inline-flex items-center gap-2 rounded-full border border-steel px-6 py-3 text-sm font-semibold text-muted transition-all hover:border-steel-light hover:text-sf-white ${step===0?'invisible':''}`}>
+                className={`inline-flex items-center gap-2 rounded-full border border-steel px-6 py-3 text-sm font-semibold text-muted transition-all hover:border-steel-light hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${step===0?'invisible':''}`}>
                 <FaChevronLeft aria-hidden="true"/> Back
               </button>
               <button type="button" onClick={handleNext}
-                className="inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-ember/20 transition-all hover:bg-ember-deep hover:-translate-y-0.5 active:scale-95">
+                className="inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-ember/20 transition-all hover:bg-ember-deep hover:-translate-y-0.5 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                 {step===5?'Proceed to payment':step===6?'Confirm and pay':'Continue'}
                 <FaChevronRight aria-hidden="true"/>
               </button>
