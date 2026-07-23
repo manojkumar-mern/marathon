@@ -11,4 +11,4 @@ A modern, responsive frontend built with React, Vite, and Tailwind CSS.
 
 ## Status
 
-🚧 Frontend under development as part of an internship project.
+Frontend under development as part of an internship project.
