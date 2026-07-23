@@ -1,4 +1,4 @@
-# Kauvery Marathon Frontend
+# Marathon Frontend
 
 A modern, responsive frontend built with React, Vite, and Tailwind CSS.
 
