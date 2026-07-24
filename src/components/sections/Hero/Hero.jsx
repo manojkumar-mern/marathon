@@ -172,13 +172,13 @@ function Hero() {
           className="relative flex flex-col"
           style={{ minHeight: '100svh' }}
         >
-          <div className="mx-auto w-full max-w-7xl px-5 pb-12 pt-28 sm:px-8 sm:pb-16 lg:px-10 lg:pb-20">
+          <div className="mx-auto w-full max-w-7xl px-5 pb-12 pt-28 sm:px-8 sm:pb-16 lg:px-10 lg:pb-20 max-sm:px-6 max-sm:pt-16 max-sm:pb-16">
 
             <h1
               id="hero-heading"
               data-hero-item
               className="font-display font-black italic leading-[0.88] tracking-tight text-sf-white"
-              style={{ fontSize: 'clamp(2.2rem, 8vw, 7.75rem)' }}
+              style={{ fontSize: 'clamp(2.6rem, 9vw, 7.75rem)' }}
             >
               ONE ROAD.
               <br />
@@ -189,7 +189,7 @@ function Hero() {
 
             <p
               data-hero-item
-              className="mt-4 max-w-lg text-base leading-6 text-muted sm:text-lg sm:leading-7"
+              className="mt-4 max-w-lg text-base leading-6 text-muted sm:text-lg sm:leading-7 max-sm:mt-6 max-sm:max-w-xs max-sm:leading-7"
             >
               India's premium marathon event series.{' '}
               <span className="text-sf-white/75">Run the city. Feel the crowd. Earn the medal.</span>
@@ -197,7 +197,7 @@ function Hero() {
 
             <div
               data-hero-item
-              className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5"
+              className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1.5 max-sm:mt-8 max-sm:gap-y-3"
             >
               <span className="flex items-center gap-1.5 text-sm text-sf-white/80">
                 <FaCalendarDays className="text-ember text-xs" />
@@ -215,7 +215,7 @@ function Hero() {
               </span>
             </div>
 
-            <div data-hero-item className="mt-3 flex flex-wrap gap-2">
+            <div data-hero-item className="mt-3 flex flex-wrap gap-2 max-sm:mt-5 max-sm:gap-x-3 max-sm:gap-y-2.5">
               {NEXT_EVENT.categories.map((cat) => (
                 <span
                   key={cat}
@@ -226,12 +226,12 @@ function Hero() {
               ))}
             </div>
 
-            <div data-hero-item className="mt-6 flex flex-wrap gap-4">
+            <div data-hero-item className="mt-6 flex flex-wrap gap-4 max-sm:mt-10 max-sm:gap-5">
               <Button to="/register">
                 Register Now{' '}
                 <FaArrowRight aria-hidden="true" className="text-xs" />
               </Button>
-              <Button to="/events" variant="ghost">
+              <Button to="/events" variant="ghost" className="max-sm:border-2 max-sm:border-white/20 max-sm:text-sf-white/80">
                 Explore Events
               </Button>
             </div>
@@ -244,7 +244,7 @@ function Hero() {
           type="button"
           onClick={handleScrollDown}
           aria-label="Scroll to next section"
-          className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+          className="absolute bottom-14 sm:bottom-6 max-sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
         >
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30">
             Scroll
