@@ -53,8 +53,7 @@ function EventDetails() {
           alt={`${event.title} marathon event`}
           className="absolute inset-0 size-full object-cover"
           src={event.image}
-          loading="lazy"
-          decoding="async"
+          fetchPriority="high"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/60 to-transparent" />
         <div className="relative flex min-h-[50vh] sm:min-h-[60vh] flex-col justify-end px-5 py-10 sm:py-14 sm:px-8 lg:px-10">
@@ -134,14 +133,15 @@ function EventDetails() {
                   </div>
                 )}
                 <div className="mt-5 overflow-hidden rounded-2xl border border-steel">
-                  <iframe
-                    title={`Map of ${event.venue ?? event.location}`}
-                    src={getMapUrl(event.venue ?? event.location)}
-                    className="h-[250px] w-full sm:h-[300px]"
-                    style={{ filter: 'invert(0.9) hue-rotate(180deg) saturate(0.5)' }}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
+                  <div className="h-[250px] w-full sm:h-[300px] [filter:invert(0.9)_hue-rotate(180deg)_saturate(0.5)]">
+                    <iframe
+                      title={`Map of ${event.venue ?? event.location}`}
+                      src={getMapUrl(event.venue ?? event.location)}
+                      className="h-full w-full"
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                    />
+                  </div>
                   <div className="border-t border-steel bg-carbon px-5 py-3">
                     <a
                       href={getMapLink(event.venue ?? event.location)}
