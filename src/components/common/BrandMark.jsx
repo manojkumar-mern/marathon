@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { BRAND } from '../../config/brand'
 // import logoSvg from '../../assets/images/logos/logo.svg'
-import logoSvg from "../../assets/images/logos/marathon-logo.png";
+import logoSvg from "../../assets/images/logos/marathon-logo.webp";
 
 /**
  * Brand logo mark + wordmark.
