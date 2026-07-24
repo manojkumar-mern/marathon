@@ -244,9 +244,9 @@ function Hero() {
           type="button"
           onClick={handleScrollDown}
           aria-label="Scroll to next section"
-          className="absolute bottom-14 sm:bottom-6 max-sm:bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+          className="absolute bottom-14 sm:bottom-6 max-sm:bottom-1 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
         >
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30 max-sm:hidden">
             Scroll
           </span>
           <div className="relative h-8 w-px overflow-hidden rounded-full bg-white/10">
