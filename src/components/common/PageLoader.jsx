@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { BRAND } from '../../config/brand'
-// import logoSvg from '../../assets/images/logos/logo.svg'
 import logoSvg from "../../assets/images/logos/marathon-logo.webp";
 
 function PageLoader({ onComplete }) {

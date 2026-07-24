@@ -44,7 +44,9 @@ function Eyebrow({ children }) {
 
 function ContentPage({ type }) {
   const content = pageContent[type] || genericPages[type]
-  const [isMessageSent, setIsMessageSent] = useState(false)
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
+  const [formErrors, setFormErrors] = useState({})
+  const [formSubmitted, setFormSubmitted] = useState(false)
 
   const seo = {
     categories: { title: 'Race Categories', description: 'Explore STRIDEFORGE race categories — Kids Run, 5K, 10K, Half Marathon, Full Marathon, and Corporate Challenge. Find your distance.', url: '/race-categories' },
@@ -421,9 +423,6 @@ function ContentPage({ type }) {
   /* ── Contact (with form) ──────────────────────────── */
   if (type === 'contact') {
     const contact = pageContent.contact
-    const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
-    const [formErrors, setFormErrors] = useState({})
-    const [formSubmitted, setFormSubmitted] = useState(false)
 
     const validateForm = () => {
       const e = {}

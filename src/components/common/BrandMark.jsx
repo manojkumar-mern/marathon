@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { BRAND } from '../../config/brand'
-// import logoSvg from '../../assets/images/logos/logo.svg'
 import logoSvg from "../../assets/images/logos/marathon-logo.webp";
 
 /**
@@ -14,7 +13,7 @@ function BrandMark() {
       className="inline-flex items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
       to="/"
     >
-      {/* Kauvery Marathon runner logomark */}
+      {/* Marathon runner logomark */}
       <span aria-hidden="true" className="flex h-10 w-auto flex-shrink-0 items-center justify-center">
         <img
           src={logoSvg}
