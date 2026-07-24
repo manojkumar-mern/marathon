@@ -86,3 +86,8 @@
   70%  { transform: scale(1.8); opacity: 0;   }
   100% { transform: scale(1.8); opacity: 0;   }
 }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
