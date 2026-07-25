@@ -8,7 +8,7 @@ function Faq() {
       <div className="mx-auto grid max-w-7xl gap-10 px-5 sm:px-8 lg:grid-cols-[0.75fr_1.25fr] lg:px-10">
 
         {/* Left */}
-        <div className="lg:sticky lg:top-28 lg:self-start">
+        <div className="lg:sticky lg:top-28">
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />
             Helpful answers
