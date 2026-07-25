@@ -1,6 +1,10 @@
-node_modules
-dist
-.vscode/*
-!.vscode/extensions.json
+.git.backup/
+
+node_modules/
+dist/
+
 .env
 .env.local
+
+.vscode/*
+!.vscode/extensions.json
