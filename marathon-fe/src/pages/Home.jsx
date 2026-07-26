@@ -652,7 +652,7 @@ function Home() {
     <main>
       <SEO
         title="Home"
-        description="India's premium marathon event series. Run the city. Feel the crowd. Earn the medal. Events in Chennai, Salem, and Bengaluru."
+        description={BRAND.description}
         url="/"
       />
       <Hero />

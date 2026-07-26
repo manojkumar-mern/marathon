@@ -1,5 +1,6 @@
 import { FaWhatsapp } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
+import { BRAND } from '../../config/brand'
 
 function WhatsAppFloat({ visible = true }) {
   return (
@@ -28,7 +29,7 @@ function WhatsAppFloat({ visible = true }) {
       {/* Button */}
       <Link
         to="/contact"
-        aria-label="Contact STRIDEFORGE support"
+        aria-label={`Contact ${BRAND.name} support`}
         className="relative flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 transition-transform duration-200 hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
       >
         <FaWhatsapp className="text-2xl" aria-hidden="true" />

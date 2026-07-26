@@ -4,6 +4,7 @@ import chennaiImg from '../assets/images/locations/chennai.webp'
 import salemImg from '../assets/images/locations/salem.webp'
 import bengaluruImg from '../assets/images/locations/bengaluru.webp'
 import { Link } from 'react-router-dom'
+import { BRAND } from '../config/brand'
 import SEO from '../components/common/SEO'
 import { faqItems, galleryImages, pageContent, raceCategories, runningClubs, upcomingMeetups, venueDetails, volunteerProgram, ambassadorProgram } from '../data/platform'
 
@@ -49,14 +50,14 @@ function ContentPage({ type }) {
   const [formSubmitted, setFormSubmitted] = useState(false)
 
   const seo = {
-    categories: { title: 'Race Categories', description: 'Explore STRIDEFORGE race categories — Kids Run, 5K, 10K, Half Marathon, Full Marathon, and Corporate Challenge. Find your distance.', url: '/race-categories' },
-    gallery: { title: 'Community & Gallery', description: 'Join the STRIDEFORGE running community. Running clubs, volunteer programs, ambassador network, and race-day photo galleries.', url: '/gallery' },
-    faq: { title: 'FAQ', description: 'Answers to common questions about STRIDEFORGE marathon events — registration, bib collection, race day, refunds, and more.', url: '/faq' },
+    categories: { title: 'Race Categories', description: `Explore ${BRAND.name} race categories — Kids Run, 5K, 10K, Half Marathon, Full Marathon, and Corporate Challenge. Find your distance.`, url: '/race-categories' },
+    gallery: { title: 'Community & Gallery', description: `Join the ${BRAND.name} running community. Running clubs, volunteer programs, ambassador network, and race-day photo galleries.`, url: '/gallery' },
+    faq: { title: 'FAQ', description: `Answers to common questions about ${BRAND.name} marathon events — registration, bib collection, race day, refunds, and more.`, url: '/faq' },
     about: { title: 'About Us', description: pageContent.about.description, url: '/about' },
-    contact: { title: 'Contact', description: 'Get in touch with the STRIDEFORGE team. Event collaboration, participant support, partnership opportunities.', url: '/contact' },
-    locations: { title: 'Locations', description: 'STRIDEFORGE marathon venues across India — Chennai, Salem, and Bengaluru. Route highlights, parking, and travel info.', url: '/locations' },
-    schedule: { title: 'Schedule', description: 'Full event schedules, race briefings, wave starts, and participant instructions for all STRIDEFORGE events.', url: '/schedule' },
-    sponsors: { title: 'Sponsors & Partners', description: 'Brands that partner with STRIDEFORGE to deliver world-class marathon experiences — title, medical, hydration, and technology partners.', url: '/sponsors' },
+    contact: { title: 'Contact', description: `Get in touch with the ${BRAND.name} team. Event collaboration, participant support, partnership opportunities.`, url: '/contact' },
+    locations: { title: 'Locations', description: `${BRAND.name} marathon venues across India — ${BRAND.cities.join(', ')}. Route highlights, parking, and travel info.`, url: '/locations' },
+    schedule: { title: 'Schedule', description: `Full event schedules, race briefings, wave starts, and participant instructions for all ${BRAND.name} events.`, url: '/schedule' },
+    sponsors: { title: 'Sponsors & Partners', description: `Brands that partner with ${BRAND.name} to deliver world-class marathon experiences — title, medical, hydration, and technology partners.`, url: '/sponsors' },
     privacy: { title: 'Privacy Policy', description: genericPages.privacy.description, url: '/privacy' },
     terms: { title: 'Terms of Service', description: genericPages.terms.description, url: '/terms' },
   }

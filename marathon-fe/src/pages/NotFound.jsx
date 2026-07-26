@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND } from '../config/brand'
 import SEO from '../components/common/SEO'
 
 function NotFound() {
@@ -7,7 +8,7 @@ function NotFound() {
       aria-label="Page not found"
       className="grid min-h-[80vh] place-items-center bg-obsidian px-5 text-center"
     >
-      <SEO title="404 — Page Not Found" description="The page you are looking for does not exist. Return to the STRIDEFORGE home page." url="/404" />
+      <SEO title="404 — Page Not Found" description={`The page you are looking for does not exist. Return to the ${BRAND.name} home page.`} url="/404" />
       <div>
         {/* Giant 404 number */}
         <p

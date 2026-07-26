@@ -137,11 +137,11 @@ export const events = [
       { position: 'All Finishers', prize: 'Premium finisher medal + E-certificate + Race photos' },
     ],
     organizer: {
-      name: 'STRIDEFORGE Events Pvt. Ltd.',
-      contactEmail: 'hello@strideforge.in',
-      contactPhone: '+91 80000 00000',
-      website: 'https://strideforge.in',
-      registeredOffice: 'No. 42, Mount Road, Chennai — 600002, Tamil Nadu, India',
+      name: BRAND.companyName,
+      contactEmail: BRAND.supportEmail,
+      contactPhone: BRAND.contactPhone,
+      website: BRAND.website,
+      registeredOffice: `${BRAND.officeAddress.line1}, ${BRAND.officeAddress.line2}`,
     },
   },
   {
@@ -192,11 +192,11 @@ export const events = [
       { position: 'All Finishers', prize: 'Finisher medal + E-certificate' },
     ],
     organizer: {
-      name: 'STRIDEFORGE Events Pvt. Ltd.',
-      contactEmail: 'hello@strideforge.in',
-      contactPhone: '+91 80000 00000',
-      website: 'https://strideforge.in',
-      registeredOffice: 'No. 42, Mount Road, Chennai — 600002, Tamil Nadu, India',
+      name: BRAND.companyName,
+      contactEmail: BRAND.supportEmail,
+      contactPhone: BRAND.contactPhone,
+      website: BRAND.website,
+      registeredOffice: `${BRAND.officeAddress.line1}, ${BRAND.officeAddress.line2}`,
     },
   },
   {
@@ -249,11 +249,11 @@ export const events = [
       { position: 'All Finishers', prize: 'Finisher medal + E-certificate' },
     ],
     organizer: {
-      name: 'STRIDEFORGE Events Pvt. Ltd.',
-      contactEmail: 'hello@strideforge.in',
-      contactPhone: '+91 80000 00000',
-      website: 'https://strideforge.in',
-      registeredOffice: 'No. 42, Mount Road, Chennai — 600002, Tamil Nadu, India',
+      name: BRAND.companyName,
+      contactEmail: BRAND.supportEmail,
+      contactPhone: BRAND.contactPhone,
+      website: BRAND.website,
+      registeredOffice: `${BRAND.officeAddress.line1}, ${BRAND.officeAddress.line2}`,
     },
   },
 ]
@@ -400,7 +400,7 @@ export const runningClubs = [
 ]
 
 export const volunteerProgram = {
-  description: 'Every STRIDEFORGE event is powered by hundreds of volunteers who bring energy, warmth, and reliability to race day. From bib distribution to water stations, finish-line medals to course marshalling — our volunteers are the backbone of every finish line.',
+  description: `Every ${BRAND.name} event is powered by hundreds of volunteers who bring energy, warmth, and reliability to race day. From bib distribution to water stations, finish-line medals to course marshalling — our volunteers are the backbone of every finish line.`,
   roles: [
     'Bib Collection & Check-in — Help runners with QR verification and kit distribution.',
     'Hydration Station Crew — Manage water tables, electrolyte dispensing, and sponge stations.',
@@ -413,9 +413,9 @@ export const volunteerProgram = {
 }
 
 export const ambassadorProgram = {
-  description: 'Our ambassadors are the face of STRIDEFORGE in their cities. They lead group runs, share their training journeys, and help build the running community year-round.',
-  benefits: ['Free race entry for one event per season', 'Exclusive STRIDEFORGE ambassador kit (gear, apparel)', 'Feature on our website and social media channels', 'Access to ambassador-only training sessions', 'Networking with elite runners and coaches', 'First access to new event announcements'],
-  expectations: ['Lead at least one community run per month', 'Share your training journey on social media (2+ posts/month)', 'Represent STRIDEFORGE at local running events', 'Provide feedback on race experience and improvements'],
+  description: `Our ambassadors are the face of ${BRAND.name} in their cities. They lead group runs, share their training journeys, and help build the running community year-round.`,
+  benefits: ['Free race entry for one event per season', `Exclusive ${BRAND.name} ambassador kit (gear, apparel)`, 'Feature on our website and social media channels', 'Access to ambassador-only training sessions', 'Networking with elite runners and coaches', 'First access to new event announcements'],
+  expectations: ['Lead at least one community run per month', 'Share your training journey on social media (2+ posts/month)', `Represent ${BRAND.name} at local running events`, 'Provide feedback on race experience and improvements'],
 }
 
 export const upcomingMeetups = [
@@ -552,7 +552,7 @@ export const testimonials = [
     city: 'Bengaluru',
     category: 'Full Marathon · 42K',
     quote:
-      'Four marathons with STRIDEFORGE and counting. Every edition gets better — better route, better crowd support, better organisation. The bar keeps rising.',
+      `Four marathons with ${BRAND.name} and counting. Every edition gets better — better route, better crowd support, better organisation. The bar keeps rising.`,
     rating: 5,
   },
   {
@@ -673,7 +673,7 @@ export const faqItems = [
 
   /* Volunteers */
   [
-    'How can I volunteer at a STRIDEFORGE event?',
+    `How can I volunteer at a ${BRAND.name} event?`,
     'Volunteer registration opens 6 weeks before each event. Sign up through the event page or contact us directly. Roles include bib collection, water stations, course marshalling, finish line support, and photography. Volunteers receive an official T-shirt, meals, and a certificate of appreciation.',
   ],
 
@@ -746,7 +746,7 @@ export const newsletterData = {
   subheading: 'Race announcements, training tips, and community stories — delivered to your inbox.',
   placeholder: 'Enter your email address',
   buttonText: 'Subscribe',
-  successMessage: 'You\'re on the list. Welcome to the STRIDEFORGE community.',
+  successMessage: `You're on the list. Welcome to the ${BRAND.name} community.`,
 }
 
 export const ctaData = {
@@ -778,7 +778,7 @@ export const pageContent = {
       { title: 'World-Class Organisation', detail: 'Precision wave starts, RFID chip timing, live results, and medical coverage at every kilometre. You focus on the run — we handle everything else.' },
       { title: 'Routes with Character', detail: 'Every course is handpicked and mapped for drama, landmarks, and crowd support. From coastal roads to heritage boulevards — every kilometre has a story.' },
       { title: 'Inclusive by Design', detail: 'Whether you are chasing a podium finish or crossing your first finish line, you belong. Separate waves, pacing groups, and support for runners of all abilities.' },
-      { title: 'Community That Stays', detail: 'Join running clubs, training groups, and social runs in your city. STRIDEFORGE is not just race day — it is a year-round community of runners who share the road.' },
+      { title: 'Community That Stays', detail: `Join running clubs, training groups, and social runs in your city. ${BRAND.name} is not just race day — it is a year-round community of runners who share the road.` },
     ],
     safety: {
       heading: 'Safety Standards',
@@ -796,7 +796,7 @@ export const pageContent = {
     },
     communityImpact: {
       heading: 'Community Impact',
-      text: 'Beyond race day, STRIDEFORGE invests in local running ecosystems. We sponsor school running programmes, support grassroots athletics, and organise free community runs in every city we operate. Our events generate economic activity for local businesses — from hotels and restaurants to transport and retail. Every event partners with a local charity, channelling a portion of registration fees toward community development initiatives.',
+      text: `Beyond race day, ${BRAND.name} invests in local running ecosystems. We sponsor school running programmes, support grassroots athletics, and organise free community runs in every city we operate. Our events generate economic activity for local businesses — from hotels and restaurants to transport and retail. Every event partners with a local charity, channelling a portion of registration fees toward community development initiatives.`,
     },
     pillars: [
       { title: 'Precision at scale', detail: 'Wave starts, timing chips, QR check-in, medical coverage — every operational detail is designed to hold under the pressure of thousands of runners on the same road.' },
@@ -807,7 +807,7 @@ export const pageContent = {
       { name: 'Anand Raghunathan',  role: 'Co-Founder & Race Director',  note: 'Former national-level marathon runner with 15+ years of event management experience. Has directed over 50 endurance events across India.' },
       { name: 'Deepa Krishnaswamy', role: 'Co-Founder & Head of Operations', note: 'Logistics specialist who has directed large-scale public events across South India. Former operations lead for Chennai Marathon series.' },
       { name: 'Vikram Seshadri',    role: 'Head of Technology',          note: 'Built the registration and timing infrastructure from the ground up. 12 years of experience in sports technology platforms.' },
-      { name: 'Dr. Priya Srinivasan', role: 'Medical Director',         note: 'Senior sports medicine physician with a focus on endurance event medical planning. Leads the medical team across all STRIDEFORGE events.' },
+      { name: 'Dr. Priya Srinivasan', role: 'Medical Director',         note: `Senior sports medicine physician with a focus on endurance event medical planning. Leads the medical team across all ${BRAND.name} events.` },
     ],
   },
   schedule: {
@@ -827,23 +827,23 @@ export const pageContent = {
     description:
       'For event collaboration, participant support, partnership opportunities, and media enquiries — our team is here.',
     supportTimings: 'Monday to Saturday, 10:00 AM – 7:00 PM IST',
-    email: 'hello@strideforge.in',
-    phone: '+91 80000 00000',
+    email: BRAND.supportEmail,
+    phone: BRAND.contactPhone,
     office: {
-      line1: 'No. 42, Mount Road, Chennai — 600002',
-      line2: 'Tamil Nadu, India',
+      line1: BRAND.officeAddress.line1,
+      line2: BRAND.officeAddress.line2,
     },
     social: [
-      { platform: 'Instagram', url: 'https://instagram.com/strideforge', handle: '@strideforge' },
-      { platform: 'X / Twitter', url: 'https://twitter.com/strideforge', handle: '@strideforge' },
-      { platform: 'Facebook', url: 'https://facebook.com/strideforge', handle: 'STRIDEFORGE' },
-      { platform: 'YouTube', url: 'https://youtube.com/@strideforge', handle: 'STRIDEFORGE Events' },
-      { platform: 'LinkedIn', url: 'https://linkedin.com/company/strideforge', handle: 'STRIDEFORGE Events' },
+      { platform: 'Instagram', url: BRAND.social.instagram.url, handle: BRAND.social.instagram.handle },
+      { platform: 'X / Twitter', url: BRAND.social.twitter.url, handle: BRAND.social.twitter.handle },
+      { platform: 'Facebook', url: BRAND.social.facebook.url, handle: BRAND.social.facebook.handle },
+      { platform: 'YouTube', url: BRAND.social.youtube.url, handle: BRAND.social.youtube.handle },
+      { platform: 'LinkedIn', url: BRAND.social.linkedin.url, handle: BRAND.social.linkedin.handle },
     ],
   },
   community: {
     eyebrow: 'Our Community',
     title: 'On the move, together.',
-    description: 'STRIDEFORGE is more than race day — it is a year-round community of runners, volunteers, and ambassadors who share the road across India.',
+    description: `${BRAND.name} is more than race day — it is a year-round community of runners, volunteers, and ambassadors who share the road across India.`,
   },
 }

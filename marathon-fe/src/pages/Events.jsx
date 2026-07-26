@@ -2,6 +2,7 @@ import SEO from '../components/common/SEO'
 import { FaArrowRight, FaCalendarDays, FaClock, FaLocationDot } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../components/common/ScrollReveal'
+import { BRAND } from '../config/brand'
 import { events } from '../data/platform'
 
 function Events({ mode }) {
@@ -16,9 +17,9 @@ function Events({ mode }) {
       : 'Thoughtfully designed endurance experiences for runners, teams, and communities.'
 
   const seoDesc = {
-    all: 'Browse all STRIDEFORGE marathon and running events across India. Register for upcoming races in Chennai, Salem, and Bengaluru.',
-    upcoming: 'View upcoming STRIDEFORGE marathon events. Register early to secure your spot at our next race.',
-    past: 'Relive past STRIDEFORGE marathon events. Results, finisher lists, and race galleries from previous editions.',
+    all: `Browse all ${BRAND.name} marathon and running events across India. Register for upcoming races in ${BRAND.cities.join(', ')}.`,
+    upcoming: `View upcoming ${BRAND.name} marathon events. Register early to secure your spot at our next race.`,
+    past: `Relive past ${BRAND.name} marathon events. Results, finisher lists, and race galleries from previous editions.`,
   }
 
   const seoUrl = mode === 'upcoming' ? '/events/upcoming' : mode === 'past' ? '/events/past' : '/events'

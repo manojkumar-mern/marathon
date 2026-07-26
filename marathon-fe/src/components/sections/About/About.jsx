@@ -1,6 +1,7 @@
 import { FaArrowRight } from 'react-icons/fa6'
 import { Link } from 'react-router-dom'
 import ScrollReveal from '../../common/ScrollReveal'
+import { BRAND } from '../../../config/brand'
 import { aboutRunner } from '../../../assets/images/index.js'
 
 const pillars = [
@@ -71,7 +72,7 @@ function About() {
           <p className="mt-6 text-base leading-7 text-muted">
             Every city we run through is chosen deliberately. Every route is
             mapped for drama and character. From the opening gun to the final
-            medal ceremony — every detail of a STRIDEFORGE race is built around
+            medal ceremony — every detail of a ${BRAND.name} race is built around
             the runners who've earned the right to be there.
           </p>
 

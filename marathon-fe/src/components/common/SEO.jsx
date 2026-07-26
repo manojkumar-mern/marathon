@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { BRAND } from '../../config/brand'
 import { heroMarathonStart } from '../../assets/images/index.js'
 
-const BASE_URL = 'https://strideforge.in'
+const BASE_URL = BRAND.website
 
 function SEO({ title, description, image, url, type = 'website' }) {
   const siteTitle = title ? `${title} | ${BRAND.name} Events` : `${BRAND.name} Events — ${BRAND.tagline}`

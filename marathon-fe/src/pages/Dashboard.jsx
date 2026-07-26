@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { BRAND } from '../config/brand'
 import SEO from '../components/common/SEO'
 
 const modules = [
@@ -17,7 +18,7 @@ const modules = [
 function Dashboard() {
   return (
     <main className="bg-obsidian py-20 sm:py-28">
-      <SEO title="Operator Dashboard" description="STRIDEFORGE event management dashboard — manage events, participants, payments, and race operations." url="/dashboard" />
+      <SEO title="Operator Dashboard" description={`${BRAND.name} event management dashboard — manage events, participants, payments, and race operations.`} url="/dashboard" />
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
           <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />

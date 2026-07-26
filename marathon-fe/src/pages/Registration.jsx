@@ -137,7 +137,7 @@ function Registration() {
 
   return (
     <main className="min-h-screen bg-obsidian py-14 sm:py-20">
-      <SEO title="Register" description="Register for STRIDEFORGE marathon events. Choose your event, category, and complete secure checkout." url="/register" />
+      <SEO title="Register" description={`Register for ${BRAND.name} marathon events. Choose your event, category, and complete secure checkout.`} url="/register" />
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
 
         {/* Header */}
@@ -336,7 +336,7 @@ function Registration() {
           {step===4 && (
             <div>
               <h2 className="font-display text-3xl font-black italic text-sf-white">Race Jersey</h2>
-              <p className="mt-2 text-sm text-muted">Every registered runner receives an official STRIDEFORGE race jersey. Choose your size.</p>
+              <p className="mt-2 text-sm text-muted">Every registered runner receives an official {BRAND.name} race jersey. Choose your size.</p>
               <div className="mt-7 flex flex-wrap gap-3">
                 {SHIRT_SIZES.map((size)=>(
                   <button key={size} type="button" onClick={()=>sf('shirt',size)} aria-pressed={form.shirt===size}
@@ -433,7 +433,7 @@ function Registration() {
                     <div className="flex size-12 items-center justify-center rounded-xl border border-ember/40 bg-ember/10 font-display text-lg font-black italic text-ember">{form.shirt}</div>
                     <div>
                       <p className="font-semibold text-sf-white">Size {form.shirt}</p>
-                      <p className="text-xs text-muted">Official STRIDEFORGE race jersey - included</p>
+                      <p className="text-xs text-muted">Official {BRAND.name} race jersey - included</p>
                     </div>
                   </div>
                 </div>

@@ -36,7 +36,7 @@ function PageLoader({ onComplete }) {
       <div ref={textRef} className="mb-8 flex flex-col items-center gap-4">
         <img
           src={logoSvg}
-          alt="Kauvery Marathon runner logo"
+          alt={BRAND.logoAlt}
           className="h-20 w-auto object-contain"
         />
 
@@ -54,7 +54,7 @@ function PageLoader({ onComplete }) {
           <span
             ref={barRef}
             className="block h-full"
-            style={{ background: 'linear-gradient(90deg, #FACC15, #F97316)' }}
+            className="block h-full bg-gradient-to-r from-volt to-ember"
           />
         </div>
       </div>

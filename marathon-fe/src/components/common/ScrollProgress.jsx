@@ -19,8 +19,8 @@ function ScrollProgress() {
       className="fixed inset-x-0 top-0 z-[60] h-[3px] origin-left"
       style={{
         width: `${progress}%`,
-        background: 'linear-gradient(90deg, #FACC15, #F97316)',
-        boxShadow: '0 0 10px rgba(249, 115, 22, 0.65)',
+        background: 'linear-gradient(90deg, var(--color-volt), var(--color-ember))',
+        boxShadow: '0 0 10px color-mix(in srgb, var(--color-ember) 65%, transparent)',
         transition: 'width 100ms linear',
       }}
     />

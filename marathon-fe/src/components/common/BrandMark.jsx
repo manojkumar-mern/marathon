@@ -17,7 +17,7 @@ function BrandMark() {
       <span aria-hidden="true" className="flex h-10 w-auto flex-shrink-0 items-center justify-center">
         <img
           src={logoSvg}
-          alt="Kauvery Marathon runner logo"
+          alt={BRAND.logoAlt}
           className="h-full w-auto object-contain"
         />
       </span>

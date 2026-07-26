@@ -21,9 +21,9 @@ const raceLinks = [
 ]
 
 const socialLinks = [
-  { label: 'Instagram', href: 'https://instagram.com', Icon: FaInstagram },
-  { label: 'X / Twitter', href: 'https://twitter.com', Icon: FaXTwitter },
-  { label: 'Facebook', href: 'https://facebook.com', Icon: FaFacebook },
+  { label: 'Instagram', href: BRAND.social.instagram.url, Icon: FaInstagram },
+  { label: 'X / Twitter', href: BRAND.social.twitter.url, Icon: FaXTwitter },
+  { label: 'Facebook', href: BRAND.social.facebook.url, Icon: FaFacebook },
 ]
 
 const legalLinks = [
@@ -112,22 +112,22 @@ function Footer() {
             <ul className="space-y-3 text-sm">
               <li>
                 <a
-                  href="mailto:hello@strideforge.in"
+                  href={`mailto:${BRAND.supportEmail}`}
                   className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
-                  hello@strideforge.in
+                  {BRAND.supportEmail}
                 </a>
               </li>
               <li>
                 <a
-                  href="tel:+918000000000"
+                  href={`tel:${BRAND.contactPhone.replace(/[^+\d]/g, '')}`}
                   className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
-                  +91 80000 00000
+                  {BRAND.contactPhone}
                 </a>
               </li>
               <li className="leading-6">
-                Chennai · Salem · Bengaluru
+                {BRAND.cities.join(' · ')}
               </li>
             </ul>
           </div>
