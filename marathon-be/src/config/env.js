@@ -34,4 +34,8 @@ export const env = {
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
 
   uploadMaxFileSize: parseInt(process.env.UPLOAD_MAX_FILE_SIZE, 10) || 5 * 1024 * 1024,
+
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID || "",
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET || "",
+  razorpayWebhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || "",
 };

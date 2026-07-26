@@ -1,0 +1,28 @@
+export const PAYMENT_STATUS = {
+  CREATED: 'created',
+  PAID: 'paid',
+  FAILED: 'failed',
+  REFUNDED: 'refunded',
+}
+
+export const GATEWAYS = {
+  RAZORPAY: 'razorpay',
+}
+
+export const DEFAULT_CURRENCY = 'INR'
+
+export const SDK_LOAD_TIMEOUT = 10000
+
+export const ERROR_CODES = {
+  SDK_LOAD_FAILED: 'SDK_LOAD_FAILED',
+  SDK_LOAD_TIMEOUT: 'SDK_LOAD_TIMEOUT',
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  PAYMENT_CANCELLED: 'PAYMENT_CANCELLED',
+  PAYMENT_FAILED: 'PAYMENT_FAILED',
+  VERIFICATION_FAILED: 'VERIFICATION_FAILED',
+  BACKEND_ERROR: 'BACKEND_ERROR',
+  SESSION_EXPIRED: 'SESSION_EXPIRED',
+  DUPLICATE_PAYMENT: 'DUPLICATE_PAYMENT',
+}
+
+export const RAZORPAY_SDK_URL = 'https://checkout.razorpay.com/v1/checkout.js'

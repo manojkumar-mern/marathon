@@ -1,14 +1,18 @@
-import { createElement, useCallback, useMemo, useState } from 'react'
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   FaCheck, FaChevronLeft, FaChevronRight,
   FaCreditCard, FaDownload, FaMobile,
-  FaShare, FaSpinner, FaLandmark, FaWallet,
+  FaShare, FaSpinner, FaLandmark, FaWallet, FaCircleExclamation,
 } from 'react-icons/fa6'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import SEO from '../components/common/SEO'
 import { BRAND } from '../config/brand'
-import { events, raceCategories } from '../data/platform'
+import { useAuth } from '../context/useAuth'
+import { events as platformEvents, raceCategories as platformRaceCategories } from '../data/platform'
+import { marathonService } from '../services/marathon.service'
+import { registrationService } from '../services/registration.service'
+import { paymentService } from '../services/payment/payment.service'
 
 const STEPS = [
   { label: 'Event',     num: 1 },
@@ -82,57 +86,196 @@ function validateStep(step, form, pm) {
   return e
 }
 
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function getEventStatus(marathon) {
+  const now = new Date()
+  if (new Date(marathon.eventDate) < now) return 'Past'
+  const regEnd = marathon.registrationEndDate ? new Date(marathon.registrationEndDate) : null
+  if (regEnd && regEnd < now) return 'Registration Closed'
+  return 'Registration Open'
+}
+
+function formatDistances(categories) {
+  if (!categories?.length) return ''
+  return categories.map((c) => c.distance).join(' / ')
+}
+
+function buildMarathons() {
+  const distToCatId = {
+    'Full Marathon': 'full', 'Half Marathon': 'half', 'Half': 'half',
+    '10K': 'ten-k', '5K': 'sprint', '5K Sprint': 'sprint', '3K Fun Run': 'fun-run',
+  }
+  const baseCats = {
+    'full':    { name: 'Full Marathon', distance: '42K', startTime: '5:30 AM', difficulty: 'extreme' },
+    'half':    { name: 'Half Marathon', distance: '21K', startTime: '6:00 AM', difficulty: 'moderate' },
+    'ten-k':   { name: '10K',           distance: '10K', startTime: '6:30 AM', difficulty: 'moderate' },
+    'sprint':  { name: '5K Sprint',     distance: '5K',  startTime: '7:00 AM', difficulty: 'easy'    },
+    'fun-run': { name: '3K Fun Run',    distance: '3K',  startTime: '7:30 AM', difficulty: 'easy'    },
+  }
+  return platformEvents.map((event) => {
+    const locParts = (event.location || '').split(',').map((s) => s.trim())
+    const distParts = (event.distance || '').split('·').map((s) => s.trim())
+    const catIds = distParts.map((d) => distToCatId[d]).filter(Boolean)
+    const cats = catIds.map((id) => {
+      const pc = platformRaceCategories.find((c) => c.id === id)
+      const bc = baseCats[id] || {}
+      return {
+        _id: id,
+        name: bc.name || pc?.title || id,
+        distance: bc.distance || pc?.distance || '',
+        price: pc ? parseInt(pc.price.replace(/[₹,]/g, ''), 10) : 499,
+        description: pc?.description || '',
+        startTime: bc.startTime || event.startTime || '6:00 AM',
+        difficulty: bc.difficulty || (pc?.difficulty || 'moderate').toLowerCase(),
+        isActive: true,
+      }
+    })
+    return {
+      _id: event.id,
+      title: event.title,
+      bannerImage: event.image,
+      eventDate: event.date,
+      venue: { city: locParts[0] || event.location, state: locParts[1] || '' },
+      registrationEndDate: event.regDeadline || null,
+      raceCategories: cats,
+    }
+  })
+}
+
 function Registration() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { isAuthenticated } = useAuth()
   const [step,setStep]               = useState(0)
   const [errors,setErrors]           = useState({})
   const [processing,setProcessing]   = useState(false)
+  const [paymentError,setPaymentError] = useState('')
   const [couponApplied,setCouponApplied] = useState(false)
   const [paymentMethod,setPaymentMethod] = useState('UPI')
+  const [marathons]                  = useState(buildMarathons)
+  const [completedReg,setCompletedReg] = useState(null)
   const [form,setForm] = useState(() => {
     const urlEventId = searchParams.get('event')
-    const initialEventId = events.find(e => e.id === urlEventId)?.id ?? events[0].id
-    return {
-      eventId:           initialEventId,
-      categoryId:        raceCategories[1]?.id ?? raceCategories[0].id,
+    const list = buildMarathons()
+    const initial = {
+      eventId:           urlEventId || (list.length > 0 ? list[0]._id : ''),
+      categoryId:        '',
       firstName:'', lastName:'', email:'', phone:'', dob:'', gender:'', city:'', pincode:'',
       emergencyName:'', emergencyRelation:'', emergencyPhone:'', bloodGroup:'', medical:'',
       shirt:'M', upiId:'', selectedBank:'', selectedWallet:'',
       cardName:'', cardNumber:'', cardExpiry:'', cardCvv:'', couponCode:'',
     }
+    if (list.length > 0) {
+      const firstCat = list[0].raceCategories?.[0]
+      if (firstCat) initial.categoryId = firstCat._id
+    }
+    return initial
   })
+
+  const marathonIdMap = useRef({})
+
+  useEffect(() => {
+    marathonService.getAll()
+      .then((res) => {
+        const apiMarathons = res.marathons || []
+        const map = {}
+        apiMarathons.forEach((am) => {
+          const match = platformEvents.find((pe) => pe.title === am.title)
+          if (match) map[match.id] = am._id
+        })
+        marathonIdMap.current = map
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const current = marathons.find((m) => m._id === form.eventId)
+    if (current?.raceCategories?.length > 0) {
+      const alreadyValid = current.raceCategories.find((c) => c._id === form.categoryId)
+      if (!alreadyValid) {
+        setForm((f) => ({ ...f, categoryId: current.raceCategories[0]._id }))
+      }
+    }
+  }, [form.eventId, form.categoryId, marathons])
+
   const upd = useCallback((e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value })), [])
   const sf  = useCallback((k,v) => setForm((f) => ({ ...f, [k]: v })), [])
   const fi  = useCallback((name) => ({ name, value: form[name], onChange: upd, className: errors[name] ? iECls : iCls, id: `f-${name}`, 'aria-invalid': !!errors[name] || undefined }), [form, errors, upd])
 
-  const selEvent = useMemo(() => events.find((e) => e.id === form.eventId), [form.eventId])
-  const selCat   = useMemo(() => raceCategories.find((c) => c.id === form.categoryId), [form.categoryId])
+  const selEvent = useMemo(() => marathons.find((m) => m._id === form.eventId), [marathons, form.eventId])
+  const selCat   = useMemo(() => selEvent?.raceCategories?.find((c) => c._id === form.categoryId), [selEvent, form.categoryId])
   const fullName = useMemo(() => [form.firstName, form.lastName].filter(Boolean).join(' ') || 'Runner', [form.firstName, form.lastName])
 
-  const registrationId = useMemo(() => {
-    const seed = (form.firstName.length + form.lastName.length + form.email.length + 1) * 317 + 10000
-    return `${BRAND.idPrefix}-2027-${String(seed).padStart(5,'0')}`
-  }, [form.firstName, form.lastName, form.email])
-
-  const bibNumber = useMemo(() => {
-    const n = ((form.firstName.charCodeAt(0)||65)*37 + form.email.length*113 + 1000) % 8000 + 1001
-    return String(n)
-  }, [form.firstName, form.email])
-
-  const basePrice = useMemo(() => Number((selCat?.price ?? '799').replace(/[^0-9]/g,'')), [selCat?.price])
+  const basePrice = useMemo(() => selCat?.price || 0, [selCat])
   const discount  = useMemo(() => couponApplied ? Math.round(basePrice*0.1) : 0, [couponApplied, basePrice])
   const subtotal  = useMemo(() => basePrice - discount, [basePrice, discount])
   const tax       = useMemo(() => Math.round(subtotal*0.18), [subtotal])
   const total     = useMemo(() => subtotal + tax, [subtotal, tax])
 
-  const handleNext = useCallback(() => {
+  const handleNext = useCallback(async () => {
     const errs = validateStep(step, form, paymentMethod)
     if (Object.keys(errs).length > 0) { setErrors(errs); window.scrollTo({top:0,behavior:'smooth'}); return }
     setErrors({})
-    if (step === 6) { setProcessing(true); setTimeout(()=>{ setProcessing(false); setStep(7) }, 2400); return }
+
+    if (step === 6) {
+      if (!isAuthenticated) {
+        navigate(`/login?redirect=/register?event=${form.eventId}`)
+        return
+      }
+
+      setProcessing(true)
+      setPaymentError('')
+
+      try {
+        let registration = completedReg
+        if (!registration) {
+          const payload = {
+            marathon: marathonIdMap.current[form.eventId] || form.eventId,
+            raceCategoryId: form.categoryId,
+            runnerDetails: {
+              fullName: [form.firstName, form.lastName].filter(Boolean).join(' '),
+              email: form.email,
+              phone: form.phone,
+              dateOfBirth: form.dob || undefined,
+              gender: form.gender ? form.gender.toLowerCase() : undefined,
+            },
+            emergencyContact: {
+              fullName: form.emergencyName,
+              phone: form.emergencyPhone,
+              relationship: form.emergencyRelation || undefined,
+            },
+            tshirtSize: form.shirt,
+            address: form.city ? { city: form.city, pincode: form.pincode || undefined } : undefined,
+            medicalInfo: (form.bloodGroup || form.medical) ? { bloodGroup: form.bloodGroup || undefined, conditions: form.medical || undefined } : undefined,
+          }
+          registration = await registrationService.create(payload)
+          setCompletedReg(registration)
+        }
+
+        await paymentService.processPayment({
+          registrationData: { registrationId: registration._id },
+          userInfo: { name: fullName, email: form.email, phone: form.phone },
+        })
+
+        setStep(7)
+      } catch (err) {
+        if (err.code === 'PAYMENT_CANCELLED') {
+          setProcessing(false)
+          return
+        }
+        setPaymentError(err.message || 'Payment failed. Please try again.')
+        setProcessing(false)
+      }
+      return
+    }
+
     setStep((s) => Math.min(s+1, STEPS.length-1))
     window.scrollTo({top:0,behavior:'smooth'})
-  }, [step, form, paymentMethod])
+  }, [step, form, paymentMethod, isAuthenticated, navigate, completedReg, fullName])
   const handleBack = useCallback(() => { setErrors({}); setStep((s)=>Math.max(s-1,0)); window.scrollTo({top:0,behavior:'smooth'}) }, [])
 
   return (
@@ -189,18 +332,28 @@ function Registration() {
               <h2 className="font-display text-3xl font-black italic text-sf-white">Choose Your Event</h2>
               <p className="mt-2 text-sm text-muted">Select the city edition you want to run in.</p>
               <div className="mt-7 grid gap-4">
-                {events.map((ev) => {
-                  const sel = form.eventId===ev.id
+                {marathons.length === 0 && (
+                  <p className="text-sm text-muted-dim">Loading events…</p>
+                )}
+                {marathons.map((m) => {
+                  const sel = form.eventId===m._id
+                  const eventStatus = new Date(m.eventDate) < new Date() ? 'Past' : 'Registration Open'
                   return (
-                    <label key={ev.id} className={`flex cursor-pointer overflow-hidden rounded-2xl border transition-all ${sel?'border-ember bg-ember/5':'border-steel hover:border-steel-light'}`}>
-                      <input type="radio" className="sr-only" name="eventId" value={ev.id} checked={sel} onChange={upd}/>
-                      <img alt={ev.title} src={ev.image} className="h-28 w-32 shrink-0 object-cover sm:h-36 sm:w-44"/>
+                    <label key={m._id} className={`flex cursor-pointer overflow-hidden rounded-2xl border transition-all ${sel?'border-ember bg-ember/5':'border-steel hover:border-steel-light'}`}>
+                      <input type="radio" className="sr-only" name="eventId" value={m._id} checked={sel} onChange={upd}/>
+                      {m.bannerImage ? (
+                        <img alt={m.title} src={m.bannerImage} className="h-28 w-32 shrink-0 object-cover sm:h-36 sm:w-44"/>
+                      ) : (
+                        <div className="h-28 w-32 shrink-0 sm:h-36 sm:w-44 bg-gradient-to-br from-carbon to-steel flex items-center justify-center">
+                          <span className="font-display text-3xl font-black italic text-steel-light/30">{m.title?.charAt(0)}</span>
+                        </div>
+                      )}
                       <div className="flex flex-1 flex-col justify-center gap-1 p-5">
-                        <span className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${ev.status==='Registration Open'?'bg-emerald-500/15 text-emerald-400':'bg-amber-500/15 text-amber-400'}`}>{ev.status}</span>
-                        <p className="mt-1.5 font-semibold text-sf-white">{ev.title}</p>
-                        <p className="text-xs text-muted">{ev.date} · {ev.location}</p>
-                        <p className="text-xs text-muted-dim">{ev.distance}</p>
-                        {ev.regDeadline && <p className="mt-1 text-xs text-muted-dim">Reg. closes: <span className="font-semibold text-volt">{ev.regDeadline}</span></p>}
+                        <span className={`w-fit rounded-full px-2.5 py-0.5 text-xs font-bold uppercase ${eventStatus==='Registration Open'?'bg-emerald-500/15 text-emerald-400':'bg-amber-500/15 text-amber-400'}`}>{eventStatus}</span>
+                        <p className="mt-1.5 font-semibold text-sf-white">{m.title}</p>
+                        <p className="text-xs text-muted">{formatDate(m.eventDate)} · {m.venue?.city}{m.venue?.state ? `, ${m.venue.state}` : ''}</p>
+                        <p className="text-xs text-muted-dim">{formatDistances(m.raceCategories)}</p>
+                        {m.registrationEndDate && <p className="mt-1 text-xs text-muted-dim">Reg. closes: <span className="font-semibold text-volt">{formatDate(m.registrationEndDate)}</span></p>}
                       </div>
                       <div className="flex shrink-0 items-center pr-5">
                         <div className={`flex size-6 items-center justify-center rounded-full border transition-all ${sel?'border-ember bg-ember':'border-steel'}`}>
@@ -220,18 +373,18 @@ function Registration() {
               <h2 className="font-display text-3xl font-black italic text-sf-white">Choose Your Distance</h2>
               <p className="mt-2 text-sm text-muted">Select the race category that matches your training and goals.</p>
               <div className="mt-7 grid gap-4 sm:grid-cols-2">
-                {raceCategories.map((cat) => {
-                  const sel = form.categoryId===cat.id
+                {(selEvent?.raceCategories || []).map((cat) => {
+                  const sel = form.categoryId===cat._id
                   return (
-                    <label key={cat.id} className={`relative cursor-pointer overflow-hidden rounded-2xl border p-6 transition-all duration-200 ${sel?'border-ember bg-ember/10 shadow-lg shadow-ember/10':'border-steel bg-obsidian hover:border-steel-light'}`}>
-                      <input type="radio" className="sr-only" name="categoryId" value={cat.id} checked={sel} onChange={upd}/>
-                      {cat.featured && <span className="absolute right-4 top-4 rounded-full bg-ember/20 px-2.5 py-0.5 text-xs font-bold text-ember">Popular</span>}
+                    <label key={cat._id} className={`relative cursor-pointer overflow-hidden rounded-2xl border p-6 transition-all duration-200 ${sel?'border-ember bg-ember/10 shadow-lg shadow-ember/10':'border-steel bg-obsidian hover:border-steel-light'}`}>
+                      <input type="radio" className="sr-only" name="categoryId" value={cat._id} checked={sel} onChange={upd}/>
+                      {cat.difficulty === 'extreme' && <span className="absolute right-4 top-4 rounded-full bg-ember/20 px-2.5 py-0.5 text-xs font-bold text-ember">Popular</span>}
                       <p className="font-display text-5xl font-black italic text-sf-white">{cat.distance}</p>
-                      <p className="mt-2 font-semibold text-sf-white">{cat.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-muted">{cat.detail}</p>
+                      <p className="mt-2 font-semibold text-sf-white">{cat.name}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted">{cat.description}</p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="text-xs text-muted">Start {cat.startTime}</span>
-                        <span className="font-display text-xl font-black italic text-volt">{cat.price}</span>
+                        <span className="font-display text-xl font-black italic text-volt">₹{Number(cat.price).toLocaleString('en-IN')}</span>
                       </div>
                       {sel && <div className="absolute bottom-4 right-4 flex size-6 items-center justify-center rounded-full bg-ember"><FaCheck className="text-[9px] text-white" aria-hidden="true"/></div>}
                     </label>
@@ -384,11 +537,11 @@ function Registration() {
                     <div>
                       <p className="text-xs text-muted">Event</p>
                       <p className="mt-1 font-semibold text-sf-white">{selEvent?.title}</p>
-                      <p className="mt-0.5 text-xs text-muted">{selEvent?.date} - {selEvent?.location}</p>
+                      <p className="mt-0.5 text-xs text-muted">{selEvent?.eventDate ? formatDate(selEvent.eventDate) : ''} - {selEvent?.venue?.city || ''}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted">Category</p>
-                      <p className="mt-1 font-semibold text-sf-white">{selCat?.title} - {selCat?.distance}</p>
+                      <p className="mt-1 font-semibold text-sf-white">{selCat?.name} - {selCat?.distance}</p>
                       <p className="mt-0.5 text-xs text-muted">Wave start: {selCat?.startTime}</p>
                     </div>
                   </div>
@@ -449,6 +602,11 @@ function Registration() {
             <div>
               <h2 className="font-display text-3xl font-black italic text-sf-white">Secure Checkout</h2>
               <p className="mt-2 text-sm text-muted">All transactions are secured with 256-bit SSL encryption.</p>
+              {paymentError && (
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400" role="alert">
+                  <FaCircleExclamation aria-hidden="true" /> {paymentError}
+                </div>
+              )}
               <div className="mt-7 grid gap-8 lg:grid-cols-[1fr_280px]">
                 <div>
                   <p className="text-sm font-medium text-muted">Payment method</p>
@@ -539,9 +697,9 @@ function Registration() {
                   <div className="rounded-2xl border border-steel bg-obsidian p-6 lg:sticky lg:top-28">
                     <p className="text-xs font-bold uppercase tracking-widest text-ember">Order Summary</p>
                     <div className="mt-5 space-y-3 text-sm">
-                      <div><p className="font-medium text-sf-white">{selEvent?.title}</p><p className="text-xs text-muted">{selEvent?.date}</p></div>
+                      <div><p className="font-medium text-sf-white">{selEvent?.title}</p><p className="text-xs text-muted">{selEvent?.eventDate ? formatDate(selEvent.eventDate) : ''}</p></div>
                       <div className="flex justify-between border-t border-steel pt-3">
-                        <span className="text-muted">{selCat?.title} ({selCat?.distance})</span>
+                        <span className="text-muted">{selCat?.name} ({selCat?.distance})</span>
                         <span className="text-sf-white">&#x20B9;{basePrice.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between">
@@ -555,7 +713,7 @@ function Registration() {
                         <span className="font-display text-xl italic text-volt">&#x20B9;{total.toLocaleString()}</span>
                       </div>
                     </div>
-                    <p className="mt-5 text-[10px] leading-4 text-muted-dim">Prototype only - no real payment processed.</p>
+                    <p className="mt-5 text-[10px] leading-4 text-muted-dim">Secured by Razorpay</p>
                   </div>
                 </div>
               </div>
@@ -590,11 +748,11 @@ function Registration() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest opacity-70">{BRAND.name}</p>
                       <p className="mt-1 font-display text-2xl font-black italic leading-tight">{selEvent?.title}</p>
-                      <p className="mt-1.5 text-xs opacity-75">{selEvent?.date} - {selEvent?.location}</p>
+                      <p className="mt-1.5 text-xs opacity-75">{selEvent?.eventDate ? formatDate(selEvent.eventDate) : ''} - {selEvent?.venue?.city || ''}</p>
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-xs uppercase tracking-widest opacity-70">BIB</p>
-                      <p className="font-display text-4xl font-black italic">{bibNumber}</p>
+                      <p className="font-display text-4xl font-black italic">{completedReg?.bibNumber || 'TBD'}</p>
                     </div>
                   </div>
                 </div>
@@ -602,8 +760,8 @@ function Registration() {
                   <div className="space-y-4">
                     {[
                       {label:'Runner name',value:fullName},
-                      {label:'Runner ID',value:registrationId},
-                      {label:'Category',value:`${selCat?.title} - ${selCat?.distance}`},
+                      {label:'Runner ID',value:completedReg?.registrationNumber || 'Confirmed'},
+                      {label:'Category',value:`${selCat?.name} - ${selCat?.distance}`},
                       {label:'Wave start',value:selCat?.startTime},
                       {label:'Jersey size',value:`Size ${form.shirt}`},
                       {label:'Emerg. contact',value:form.emergencyName||'Not provided'},
@@ -616,7 +774,7 @@ function Registration() {
                   </div>
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="rounded-xl bg-sf-white p-3">
-                      <QRCodeSVG size={110} value={`${registrationId}|${form.email||'runner'}|${form.eventId}|${form.categoryId}`} bgColor="#F8FAFC" fgColor="#080C10" level="H"/>
+                      <QRCodeSVG size={110} value={`${completedReg?._id || form.email}|${form.email||'runner'}|${form.eventId}|${form.categoryId}`} bgColor="#F8FAFC" fgColor="#080C10" level="H"/>
                     </div>
                     <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-dim">Scan at check-in</p>
                   </div>
@@ -632,7 +790,7 @@ function Registration() {
                   className="inline-flex items-center gap-2 rounded-full bg-ember px-7 py-3 text-sm font-semibold text-white transition-all hover:bg-ember-deep hover:-translate-y-0.5 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
                   <FaDownload aria-hidden="true"/> Download ticket
                 </button>
-                <button type="button" onClick={()=>{ if(navigator.share) navigator.share({title:`${BRAND.name} - ${selEvent?.title}`,text:`I am registered! Bib ${bibNumber}. See you at the start line.`}) }}
+                <button type="button" onClick={()=>{ if(navigator.share) navigator.share({title:`${BRAND.name} - ${selEvent?.title}`,text:`I am registered! ${completedReg?.registrationNumber ? `ID: ${completedReg.registrationNumber}. ` : ''}See you at the start line.`}) }}
                   className="inline-flex items-center gap-2 rounded-full border border-steel px-7 py-3 text-sm font-semibold text-muted transition-all hover:border-ember/40 hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember">
                   <FaShare aria-hidden="true"/> Share
                 </button>
@@ -665,7 +823,7 @@ function Registration() {
 
         {step<7 && (
           <p className="mt-6 text-center text-xs text-muted-dim">
-            Client-side prototype - no personal data is submitted or stored.
+            Your registration and payment data is securely processed.
           </p>
         )}
       </div>
