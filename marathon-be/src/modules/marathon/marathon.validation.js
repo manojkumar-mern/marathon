@@ -1,7 +1,7 @@
 import { body, param, query } from "express-validator";
+import { PHONE_REGEX } from "../../constants/regex.js";
 
 const urlRegex = /^https?:\/\/.+/;
-const phoneRegex = /^[6-9]\d{9}$/;
 
 export const createMarathonValidation = [
   body("title")
@@ -44,7 +44,7 @@ export const createMarathonValidation = [
 
   body("contactPhone")
     .optional()
-    .matches(phoneRegex)
+    .matches(PHONE_REGEX)
     .withMessage("Valid 10-digit Indian phone number is required"),
 
   body("bannerImage")

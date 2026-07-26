@@ -26,4 +26,12 @@ export const env = {
   smtpUser: process.env.SMTP_USER || "",
   smtpPass: process.env.SMTP_PASS || "",
   emailFrom: process.env.EMAIL_FROM || "noreply@example.com",
+
+  corsOrigin: process.env.CORS_ORIGIN || "http://localhost:5173,http://localhost:3000",
+
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || "",
+
+  uploadMaxFileSize: parseInt(process.env.UPLOAD_MAX_FILE_SIZE, 10) || 5 * 1024 * 1024,
 };

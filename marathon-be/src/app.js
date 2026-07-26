@@ -10,13 +10,22 @@ import authRoutes from "./routes/auth.js";
 import marathonRoutes from "./modules/marathon/marathon.routes.js";
 import registrationRoutes from "./modules/registration/registration.routes.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
+import uploadRoutes from "./modules/upload/upload.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { env } from "./config/env.js";
 
 const app = express();
 
+const corsOptions = {
+  origin: env.corsOrigin
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean),
+  credentials: true,
+};
+
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(compression());
 app.use(morgan("dev"));
 
@@ -37,6 +46,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/marathons", marathonRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

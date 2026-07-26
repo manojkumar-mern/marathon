@@ -125,7 +125,7 @@ const marathonSchema = new mongoose.Schema(
 );
 
 marathonSchema.index({ status: 1, eventDate: -1 });
-marathonSchema.index({ city: 1, status: 1 });
+marathonSchema.index({ "venue.city": 1, status: 1 });
 marathonSchema.index({ featured: 1, status: 1 });
 marathonSchema.index({ title: "text", shortDescription: "text" });
 

@@ -1,6 +1,6 @@
 import { body, param, query } from "express-validator";
+import { PHONE_REGEX } from "../../constants/regex.js";
 
-const phoneRegex = /^[6-9]\d{9}$/;
 const tshirtSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
 export const createRegistrationValidation = [
@@ -25,7 +25,7 @@ export const createRegistrationValidation = [
 
   body("runnerDetails.phone")
     .trim()
-    .matches(phoneRegex)
+    .matches(PHONE_REGEX)
     .withMessage("Valid 10-digit Indian phone number is required for runner"),
 
   body("emergencyContact.fullName")
@@ -35,7 +35,7 @@ export const createRegistrationValidation = [
 
   body("emergencyContact.phone")
     .trim()
-    .matches(phoneRegex)
+    .matches(PHONE_REGEX)
     .withMessage("Valid 10-digit Indian phone number is required for emergency contact"),
 
   body("tshirtSize")

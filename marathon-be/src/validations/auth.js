@@ -1,6 +1,5 @@
 import { body } from "express-validator";
-
-const phoneRegex = /^[6-9]\d{9}$/;
+import { PHONE_REGEX } from "../constants/regex.js";
 
 export const registerValidation = [
   body("fullName")
@@ -26,7 +25,7 @@ export const registerValidation = [
 
   body("phone")
     .trim()
-    .matches(phoneRegex)
+    .matches(PHONE_REGEX)
     .withMessage("Valid 10-digit Indian phone number is required"),
 ];
 

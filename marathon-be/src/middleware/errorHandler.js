@@ -24,6 +24,16 @@ const handleJWTExpiredError = () => {
   return { statusCode: 401, message: "Token expired. Please log in again." };
 };
 
+const handleMulterError = (err) => {
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return { statusCode: 400, message: "File size exceeds the maximum allowed size" };
+  }
+  if (err.code === "LIMIT_UNEXPECTED_FILE") {
+    return { statusCode: 400, message: "Unexpected file field" };
+  }
+  return { statusCode: 400, message: err.message };
+};
+
 export const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal server error";
@@ -58,8 +68,18 @@ export const errorHandler = (err, req, res, next) => {
     message = handled.message;
   }
 
-  if (env.isProduction && statusCode === 500) {
-    message = "Internal server error";
+  if (err.name === "MulterError") {
+    const handled = handleMulterError(err);
+    statusCode = handled.statusCode;
+    message = handled.message;
+  }
+
+  if (statusCode === 500) {
+    if (env.isProduction) {
+      message = "Internal server error";
+    } else {
+      console.error("❌ Unhandled error:", err);
+    }
   }
 
   res.status(statusCode).json({
