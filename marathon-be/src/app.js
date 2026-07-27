@@ -12,6 +12,7 @@ import registrationRoutes from "./modules/registration/registration.routes.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import uploadRoutes from "./modules/upload/upload.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
+import adminRoutes from "./modules/admin/admin.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { env } from "./config/env.js";
 
@@ -49,6 +50,7 @@ app.use("/api/registrations", registrationRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

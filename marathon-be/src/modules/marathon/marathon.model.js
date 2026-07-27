@@ -65,6 +65,14 @@ const seoSchema = new mongoose.Schema(
 
 const marathonSchema = new mongoose.Schema(
   {
+    eventCode: {
+      type: String,
+      unique: true,
+      trim: true,
+      sparse: true,
+    },
+    termsConditions: { type: String, trim: true },
+    isDeleted: { type: Boolean, default: false },
     title: {
       type: String,
       required: [true, "Marathon title is required"],

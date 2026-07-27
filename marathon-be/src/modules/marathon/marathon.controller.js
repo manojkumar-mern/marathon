@@ -78,3 +78,23 @@ export const remove = asyncHandler(async (req, res) => {
     message: "Marathon deleted successfully",
   });
 });
+
+export const updateStatus = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return errorResponse(res, {
+      statusCode: 400,
+      message: errors.array()[0].msg,
+    });
+  }
+
+  const marathon = await marathonService.updateMarathonStatus(
+    req.params.id,
+    req.body.status
+  );
+
+  return successResponse(res, {
+    message: "Marathon status updated successfully",
+    data: { marathon },
+  });
+});

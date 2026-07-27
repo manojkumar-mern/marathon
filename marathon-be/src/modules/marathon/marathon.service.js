@@ -1,12 +1,20 @@
 import Marathon from "./marathon.model.js";
+import Registration from "../registration/registration.model.js";
 import { AppError } from "../../utils/AppError.js";
 
 export const createMarathon = async (data) => {
-  const existing = await Marathon.findOne({ slug: data.slug });
-  if (existing) {
-    const baseSlug = data.slug.replace(/-\d+$/, "");
-    const count = await Marathon.countDocuments({ slug: new RegExp(`^${baseSlug}-?\\d*$`) });
-    data.slug = `${baseSlug}-${count + 1}`;
+  if (data.slug) {
+    const existing = await Marathon.findOne({ slug: data.slug, isDeleted: { $ne: true } });
+    if (existing) {
+      throw new AppError("A marathon with this slug already exists", 409);
+    }
+  }
+
+  if (data.eventCode) {
+    const existing = await Marathon.findOne({ eventCode: data.eventCode, isDeleted: { $ne: true } });
+    if (existing) {
+      throw new AppError("A marathon with this event code already exists", 409);
+    }
   }
 
   const marathon = await Marathon.create(data);
@@ -21,11 +29,12 @@ export const getAllMarathons = async (query) => {
     city,
     status,
     featured,
+    eventCode,
     sort = "-eventDate",
     all,
   } = query;
 
-  const filter = {};
+  const filter = { isDeleted: { $ne: true } };
 
   if (!all) filter.status = "published";
 
@@ -34,22 +43,39 @@ export const getAllMarathons = async (query) => {
       { title: { $regex: search, $options: "i" } },
       { shortDescription: { $regex: search, $options: "i" } },
       { "venue.city": { $regex: search, $options: "i" } },
+      { eventCode: { $regex: search, $options: "i" } },
     ];
   }
 
   if (city) filter["venue.city"] = { $regex: city, $options: "i" };
   if (status) filter.status = status;
+  if (eventCode) filter.eventCode = { $regex: eventCode, $options: "i" };
   if (featured !== undefined) filter.featured = featured === "true";
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
   const [marathons, total] = await Promise.all([
-    Marathon.find(filter).sort(sort).skip(skip).limit(parseInt(limit)),
+    Marathon.find(filter).sort(sort).skip(skip).limit(parseInt(limit)).lean(),
     Marathon.countDocuments(filter),
   ]);
 
+  const marathonIds = marathons.map((m) => m._id);
+  let countMap = {};
+  if (marathonIds.length > 0) {
+    const regCounts = await Registration.aggregate([
+      { $match: { marathon: { $in: marathonIds } } },
+      { $group: { _id: "$marathon", count: { $sum: 1 } } },
+    ]);
+    regCounts.forEach((r) => { countMap[r._id.toString()] = r.count; });
+  }
+
+  const marathonsWithCounts = marathons.map((m) => ({
+    ...m,
+    registrationCount: countMap[m._id.toString()] || 0,
+  }));
+
   return {
-    marathons,
+    marathons: marathonsWithCounts,
     total,
     page: parseInt(page),
     limit: parseInt(limit),
@@ -58,7 +84,7 @@ export const getAllMarathons = async (query) => {
 };
 
 export const getMarathonBySlug = async (slug) => {
-  const marathon = await Marathon.findOne({ slug, status: "published" });
+  const marathon = await Marathon.findOne({ slug, isDeleted: { $ne: true } });
   if (!marathon) {
     throw new AppError("Marathon not found", 404);
   }
@@ -67,13 +93,35 @@ export const getMarathonBySlug = async (slug) => {
 
 export const getMarathonById = async (id) => {
   const marathon = await Marathon.findById(id);
-  if (!marathon) {
+  if (!marathon || marathon.isDeleted) {
     throw new AppError("Marathon not found", 404);
   }
   return marathon;
 };
 
 export const updateMarathon = async (id, data) => {
+  if (data.slug) {
+    const existing = await Marathon.findOne({
+      slug: data.slug,
+      _id: { $ne: id },
+      isDeleted: { $ne: true },
+    });
+    if (existing) {
+      throw new AppError("A marathon with this slug already exists", 409);
+    }
+  }
+
+  if (data.eventCode) {
+    const existing = await Marathon.findOne({
+      eventCode: data.eventCode,
+      _id: { $ne: id },
+      isDeleted: { $ne: true },
+    });
+    if (existing) {
+      throw new AppError("A marathon with this event code already exists", 409);
+    }
+  }
+
   const marathon = await Marathon.findByIdAndUpdate(id, data, {
     returnDocument: "after",
     runValidators: true,
@@ -85,7 +133,23 @@ export const updateMarathon = async (id, data) => {
 };
 
 export const deleteMarathon = async (id) => {
-  const marathon = await Marathon.findByIdAndDelete(id);
+  const marathon = await Marathon.findByIdAndUpdate(
+    id,
+    { isDeleted: true },
+    { returnDocument: "after" }
+  );
+  if (!marathon) {
+    throw new AppError("Marathon not found", 404);
+  }
+  return marathon;
+};
+
+export const updateMarathonStatus = async (id, status) => {
+  const marathon = await Marathon.findByIdAndUpdate(
+    id,
+    { status },
+    { returnDocument: "after", runValidators: true }
+  );
   if (!marathon) {
     throw new AppError("Marathon not found", 404);
   }

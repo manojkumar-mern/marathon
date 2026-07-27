@@ -91,6 +91,7 @@ function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+// eslint-disable-next-line no-unused-vars
 function getEventStatus(marathon) {
   const now = new Date()
   if (new Date(marathon.eventDate) < now) return 'Past'

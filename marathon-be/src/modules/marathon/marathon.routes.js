@@ -34,5 +34,11 @@ router.delete(
   authorize("admin"),
   marathonController.remove
 );
+router.patch(
+  "/:id/status",
+  authenticateUser,
+  authorize("admin"),
+  marathonController.updateStatus
+);
 
 export default router;

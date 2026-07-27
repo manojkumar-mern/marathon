@@ -99,3 +99,26 @@ export const getMe = asyncHandler(async (req, res) => {
     },
   });
 });
+
+export const becomeAdmin = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new AppError("User not found", 404);
+  }
+  user.role = "admin";
+  await user.save();
+  const token = generateToken({ id: user._id, role: "admin" });
+  return successResponse(res, {
+    message: "Account promoted to admin",
+    data: {
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        role: "admin",
+      },
+    },
+  });
+});
