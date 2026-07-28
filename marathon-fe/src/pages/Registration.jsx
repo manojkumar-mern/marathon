@@ -177,21 +177,56 @@ function Registration() {
     return initial
   })
 
+  // Maps platform event ID → real Mongo marathon ID
   const marathonIdMap = useRef({})
+  // Maps platform event ID → full API marathon object (with real category ObjectIds)
+  const apiMarathonDataMap = useRef({})
+
+  // Helper: try to match a platform event to an API marathon using multiple strategies
+  const matchApiMarathon = useCallback((platformEventId, apiMarathons) => {
+    const platformEvent = platformEvents.find((pe) => pe.id === platformEventId)
+    if (!platformEvent) return null
+
+    // Strategy 1: exact title match
+    let am = apiMarathons.find((m) => m.title === platformEvent.title)
+    if (am) return am
+
+    // Strategy 2: partial title match (one contains the other, case-insensitive)
+    const pt = platformEvent.title.toLowerCase()
+    am = apiMarathons.find((m) => {
+      const at = (m.title || '').toLowerCase()
+      return at.includes(pt) || pt.includes(at)
+    })
+    if (am) return am
+
+    // Strategy 3: slug match
+    am = apiMarathons.find((m) => m.slug === platformEventId)
+    if (am) return am
+
+    // Strategy 4: city keyword match
+    const cityKw = pt.split(' ')[0]
+    am = apiMarathons.find((m) => (m.title || '').toLowerCase().includes(cityKw))
+    return am || null
+  }, [])
 
   useEffect(() => {
     marathonService.getAll()
       .then((res) => {
         const apiMarathons = res.marathons || []
-        const map = {}
-        apiMarathons.forEach((am) => {
-          const match = platformEvents.find((pe) => pe.title === am.title)
-          if (match) map[match.id] = am._id
+        const idMap = {}
+        const dataMap = {}
+        platformEvents.forEach((pe) => {
+          const am = matchApiMarathon(pe.id, apiMarathons)
+          if (am) {
+            idMap[pe.id] = am._id
+            dataMap[pe.id] = am
+          }
         })
-        marathonIdMap.current = map
+        marathonIdMap.current = idMap
+        apiMarathonDataMap.current = dataMap
       })
       .catch(() => {})
-  }, [])
+  }, [matchApiMarathon])
 
   useEffect(() => {
     const current = marathons.find((m) => m._id === form.eventId)
@@ -222,6 +257,12 @@ function Registration() {
     if (Object.keys(errs).length > 0) { setErrors(errs); window.scrollTo({top:0,behavior:'smooth'}); return }
     setErrors({})
 
+    // Auth guard: redirect to login before the payment step
+    if (step === 5 && !isAuthenticated) {
+      navigate(`/login?redirect=/register?event=${form.eventId}`)
+      return
+    }
+
     if (step === 6) {
       if (!isAuthenticated) {
         navigate(`/login?redirect=/register?event=${form.eventId}`)
@@ -234,9 +275,50 @@ function Registration() {
       try {
         let registration = completedReg
         if (!registration) {
+          // Resolve real marathon ID — try cached map first, then fresh fetch
+          let realMarathonId = marathonIdMap.current[form.eventId]
+          let apiMarathon = apiMarathonDataMap.current[form.eventId]
+
+          if (!realMarathonId) {
+            // Cache miss — do a fresh fetch right now
+            try {
+              const freshRes = await marathonService.getAll()
+              const freshApiMarathons = freshRes.marathons || []
+              const freshMatch = matchApiMarathon(form.eventId, freshApiMarathons)
+              if (freshMatch) {
+                realMarathonId = freshMatch._id
+                apiMarathon = freshMatch
+                // Update cache
+                marathonIdMap.current[form.eventId] = freshMatch._id
+                apiMarathonDataMap.current[form.eventId] = freshMatch
+              }
+            } catch { /* ignore */ }
+          }
+
+          if (!realMarathonId) {
+            throw new Error('This event is not yet available for online registration. Please contact the organiser.')
+          }
+
+          // Resolve real category ID from API marathon categories
+          let realCategoryId = form.categoryId
+          if (apiMarathon?.raceCategories?.length > 0) {
+            const platformCat = marathons
+              .find((m) => m._id === form.eventId)
+              ?.raceCategories?.find((c) => c._id === form.categoryId)
+            if (platformCat) {
+              const apiCat = apiMarathon.raceCategories.find(
+                (c) =>
+                  c.name === platformCat.name ||
+                  c.distance === platformCat.distance ||
+                  c._id?.toString() === form.categoryId
+              )
+              if (apiCat) realCategoryId = apiCat._id
+            }
+          }
+
           const payload = {
-            marathon: marathonIdMap.current[form.eventId] || form.eventId,
-            raceCategoryId: form.categoryId,
+            marathon: realMarathonId,
+            raceCategoryId: realCategoryId,
             runnerDetails: {
               fullName: [form.firstName, form.lastName].filter(Boolean).join(' '),
               email: form.email,
@@ -251,7 +333,9 @@ function Registration() {
             },
             tshirtSize: form.shirt,
             address: form.city ? { city: form.city, pincode: form.pincode || undefined } : undefined,
-            medicalInfo: (form.bloodGroup || form.medical) ? { bloodGroup: form.bloodGroup || undefined, conditions: form.medical || undefined } : undefined,
+            medicalInfo: (form.bloodGroup || form.medical)
+              ? { bloodGroup: form.bloodGroup || undefined, conditions: form.medical || undefined }
+              : undefined,
           }
           registration = await registrationService.create(payload)
           setCompletedReg(registration)
@@ -262,7 +346,9 @@ function Registration() {
           userInfo: { name: fullName, email: form.email, phone: form.phone },
         })
 
+        setProcessing(false)
         setStep(7)
+        window.scrollTo({top:0,behavior:'smooth'})
       } catch (err) {
         if (err.code === 'PAYMENT_CANCELLED') {
           setProcessing(false)
@@ -276,7 +362,7 @@ function Registration() {
 
     setStep((s) => Math.min(s+1, STEPS.length-1))
     window.scrollTo({top:0,behavior:'smooth'})
-  }, [step, form, paymentMethod, isAuthenticated, navigate, completedReg, fullName])
+  }, [step, form, paymentMethod, isAuthenticated, navigate, completedReg, fullName, marathons, matchApiMarathon])
   const handleBack = useCallback(() => { setErrors({}); setStep((s)=>Math.max(s-1,0)); window.scrollTo({top:0,behavior:'smooth'}) }, [])
 
   return (

@@ -7,7 +7,7 @@ import SEO from '../../components/common/SEO'
 import PageContainer from '../components/PageContainer'
 import DataTable from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge'
-import { paymentService } from '../../services/payment/payment.service'
+import { paymentService } from '../services/admin.service'
 import useTableState from '../hooks/useTableState'
 import { BRAND } from '../../config/brand'
 

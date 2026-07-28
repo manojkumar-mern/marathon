@@ -21,7 +21,7 @@ const raceCategorySchema = new mongoose.Schema(
     description: { type: String, trim: true },
     isActive: { type: Boolean, default: true },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const venueSchema = new mongoose.Schema(

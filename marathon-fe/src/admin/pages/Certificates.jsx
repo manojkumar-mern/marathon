@@ -205,16 +205,19 @@ function AdminCertificates() {
               onClick: (row) => navigate(`/admin/certificates/${row._id}`),
             },
             {
+              label: 'View / Print',
+              icon: FaEye,
+              onClick: (row) => certificateService.preview(row._id),
+            },
+            {
               label: 'Download',
               icon: FaDownload,
-              onClick: (row) => {
-                if (row.certificateUrl) window.open(row.certificateUrl, '_blank')
-              },
+              onClick: (row) => certificateService.download(row._id),
             },
             {
               label: 'Email',
               icon: FaEnvelope,
-              onClick: (row) => navigate(`/admin/certificates/${row._id}/email`),
+              onClick: (row) => navigate(`/admin/certificates/${row._id}`),
             },
             {
               label: 'Regenerate',

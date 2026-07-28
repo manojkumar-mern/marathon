@@ -1,0 +1,15 @@
+{
+  "event": "PAYMENT_SUCCESS",
+  "timestamp": "2026-07-28T12:00:00.000Z",
+  "data": {
+    "transactionId": "TXN-ABC123",
+    "registrationNumber": "REG-2026-00042",
+    "runnerDetails": {
+      "fullName": "Arjun Krishnamurthy",
+      "email": "arjun@example.com"
+    },
+    "amount": 1499,
+    "currency": "INR",
+    "method": "razorpay"
+  }
+}

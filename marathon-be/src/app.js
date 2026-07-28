@@ -13,6 +13,9 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import uploadRoutes from "./modules/upload/upload.routes.js";
 import paymentRoutes from "./modules/payment/payment.routes.js";
 import adminRoutes from "./modules/admin/admin.routes.js";
+import resultRoutes from "./modules/result/result.routes.js";
+import certificateRoutes from "./modules/certificate/certificate.routes.js";
+import cmsRoutes from "./modules/cms/cms.routes.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { env } from "./config/env.js";
 
@@ -31,14 +34,23 @@ app.use(cors(corsOptions));
 app.use(compression());
 app.use(morgan("dev"));
 
-const limiter = rateLimit({
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: "Too many login attempts. Please try again later." },
+});
+app.use("/api/auth", authLimiter);
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many requests. Please try again later." },
 });
-app.use("/api", limiter);
+app.use("/api", apiLimiter);
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
@@ -51,6 +63,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/results", resultRoutes);
+app.use("/api/certificates", certificateRoutes);
+app.use("/api/cms", cmsRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({

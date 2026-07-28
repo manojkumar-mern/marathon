@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FaUsers, FaCircleCheck, FaClock, FaCircleXmark,
-  FaEye, FaTrashCan, FaFileExport, FaFileArrowDown,
+  FaEye, FaTrashCan, FaFileExport, FaFileArrowDown, FaShirt,
 } from 'react-icons/fa6'
 import SEO from '../../components/common/SEO'
 import PageContainer from '../components/PageContainer'
@@ -10,6 +10,7 @@ import DataTable from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { participantService } from '../services/participant.service'
+import { MOCK_TSHIRT_SIZES } from '../services/mock.data'
 import useTableState from '../hooks/useTableState'
 import { BRAND } from '../../config/brand'
 
@@ -50,6 +51,15 @@ const columns = [
     label: 'Category',
     render: (val) => (
       <span className="text-xs text-muted">{val?.name || '—'}</span>
+    ),
+  },
+  {
+    key: 'tshirtSize',
+    label: 'T-Shirt',
+    render: (val) => (
+      <span className="inline-flex items-center rounded-full bg-steel/40 px-2 py-0.5 text-xs font-semibold text-sf-white">
+        {val || '—'}
+      </span>
     ),
   },
   {
@@ -115,6 +125,60 @@ function SummaryCard({ label, value, icon: Icon, color }) {
   )
 }
 
+/* ── T-Shirt Size Report ─────────────────────────────────────────── */
+function TshirtSizeReport({ rows }) {
+  const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL']
+
+  // Compute from live data if available, else use mock
+  const sizeMap = useMemo(() => {
+    if (rows && rows.length > 0) {
+      const map = {}
+      rows.forEach((r) => {
+        const sz = r.tshirtSize || 'N/A'
+        map[sz] = (map[sz] || 0) + 1
+      })
+      return map
+    }
+    const map = {}
+    MOCK_TSHIRT_SIZES.forEach((s) => { map[s.size] = s.count })
+    return map
+  }, [rows])
+
+  const sizes = sizeOrder.map((sz) => ({ size: sz, count: sizeMap[sz] || 0 }))
+  const total = sizes.reduce((s, r) => s + r.count, 0)
+
+  return (
+    <div className="mt-8 rounded-xl border border-steel bg-carbon p-6">
+      <div className="mb-4 flex items-center gap-2">
+        <FaShirt className="size-4 text-ember" />
+        <h3 className="text-sm font-semibold text-sf-white">T-Shirt Size Report</h3>
+        <span className="ml-auto text-xs text-muted-dim">Total: {total}</span>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {sizes.map((s) => {
+          const pct = total > 0 ? Math.round((s.count / total) * 100) : 0
+          return (
+            <div
+              key={s.size}
+              className="flex flex-col items-center rounded-xl border border-steel/60 bg-obsidian p-3 text-center"
+            >
+              <span className="text-xs font-bold uppercase tracking-wider text-ember">{s.size}</span>
+              <span className="mt-1 text-2xl font-black text-sf-white">{s.count}</span>
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-steel/40">
+                <div
+                  className="h-full rounded-full bg-ember"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="mt-1 text-[10px] text-muted-dim">{pct}%</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 /* ── Main component ──────────────────────────────────────────────── */
 function AdminParticipants() {
   const navigate = useNavigate()
@@ -132,6 +196,8 @@ function AdminParticipants() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [exporting, setExporting] = useState(false)
+  // Cache all rows (unfiltered) for the T-shirt size report
+  const [allRows, setAllRows] = useState([])
 
   const fetchParticipants = useCallback(async () => {
     setLoading(true)
@@ -144,6 +210,12 @@ function AdminParticipants() {
 
       const res = await participantService.list(params)
       setData(res)
+
+      // For the T-shirt report, also fetch all (no filters)
+      if (!search && !filters.status) {
+        const allRes = await participantService.list({ limit: 10000 })
+        setAllRows(allRes.registrations || [])
+      }
     } catch (err) {
       setError(err.message || 'Failed to load participants')
     } finally {
@@ -153,6 +225,16 @@ function AdminParticipants() {
 
   useEffect(() => { fetchParticipants() }, [fetchParticipants])
   useEffect(() => { setPage(1) }, [search, filters, setPage])
+
+  // Compute summary counts from current page data
+  const counts = useMemo(() => {
+    const rows = data.registrations || []
+    return {
+      confirmed: rows.filter((r) => r.status === 'confirmed').length,
+      pending:   rows.filter((r) => r.status === 'pending').length,
+      cancelled: rows.filter((r) => r.status === 'cancelled').length,
+    }
+  }, [data.registrations])
 
   async function handleDelete() {
     if (!deleteTarget) return
@@ -196,11 +278,6 @@ function AdminParticipants() {
     }
   }
 
-  // Summary counts from current page
-  const confirmed = data.registrations?.filter((r) => r.status === 'confirmed').length ?? 0
-  const pending   = data.registrations?.filter((r) => r.status === 'pending').length ?? 0
-  const cancelled = data.registrations?.filter((r) => r.status === 'cancelled').length ?? 0
-
   return (
     <>
       <SEO title="Participants" description={`Manage ${BRAND.name} participant registrations`} />
@@ -218,19 +295,19 @@ function AdminParticipants() {
           />
           <SummaryCard
             label="Confirmed"
-            value={confirmed}
+            value={counts.confirmed}
             icon={FaCircleCheck}
             color="bg-emerald-500/10 text-emerald-400"
           />
           <SummaryCard
             label="Pending"
-            value={pending}
+            value={counts.pending}
             icon={FaClock}
             color="bg-amber-500/10 text-amber-400"
           />
           <SummaryCard
             label="Cancelled"
-            value={cancelled}
+            value={counts.cancelled}
             icon={FaCircleXmark}
             color="bg-red-500/10 text-red-400"
           />
@@ -298,6 +375,9 @@ function AdminParticipants() {
             Exports all matching records (up to 10,000)
           </span>
         </div>
+
+        {/* T-Shirt Size Report */}
+        <TshirtSizeReport rows={allRows} />
       </PageContainer>
 
       <ConfirmDialog

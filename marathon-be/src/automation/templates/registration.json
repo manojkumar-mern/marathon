@@ -1,0 +1,21 @@
+{
+  "event": "REGISTRATION_SUCCESS",
+  "timestamp": "2026-07-28T12:00:00.000Z",
+  "data": {
+    "registrationNumber": "REG-2026-00042",
+    "runnerDetails": {
+      "fullName": "Arjun Krishnamurthy",
+      "email": "arjun@example.com",
+      "phone": "9876543210"
+    },
+    "marathon": {
+      "title": "Chennai Marina 42K",
+      "eventDate": "2027-01-18T00:00:00.000Z"
+    },
+    "raceCategory": {
+      "name": "Half Marathon",
+      "distance": "21K"
+    },
+    "status": "confirmed"
+  }
+}

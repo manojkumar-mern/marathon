@@ -5,7 +5,7 @@ function useTableState(initialState = {}) {
   const [filters, setFilters] = useState(initialState.filters || {})
   const [sort, setSort] = useState(initialState.sort || { key: '', direction: 'asc' })
   const [page, setPage] = useState(initialState.page || 1)
-  const [rowsPerPage, setRowsPerPage] = useState(initialState.rowsPerPage || 10)
+  const [rowsPerPage, setRowsPerPage] = useState(initialState.rowsPerPage || 50)
 
   const reset = useCallback(() => {
     setSearch('')

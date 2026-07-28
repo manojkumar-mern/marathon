@@ -1,0 +1,22 @@
+{
+  "event": "CERTIFICATE_READY",
+  "timestamp": "2026-07-28T12:00:00.000Z",
+  "data": {
+    "registrationNumber": "REG-2026-00042",
+    "runnerDetails": {
+      "fullName": "Arjun Krishnamurthy",
+      "email": "arjun@example.com"
+    },
+    "marathon": {
+      "title": "Chennai Marina 42K",
+      "eventDate": "2027-01-18T00:00:00.000Z"
+    },
+    "raceCategory": {
+      "name": "Half Marathon",
+      "distance": "21K",
+      "position": "1st"
+    },
+    "certificateUrl": "https://example.com/certificates/REG-2026-00042.pdf",
+    "bibNumber": "B-1042"
+  }
+}

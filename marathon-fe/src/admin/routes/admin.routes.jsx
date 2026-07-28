@@ -15,6 +15,8 @@ const Participants  = lazy(() => import('../pages/Participants'))
 const Payments      = lazy(() => import('../pages/Payments'))
 const Results       = lazy(() => import('../pages/Results'))
 const Certificates  = lazy(() => import('../pages/Certificates'))
+const CertificateGenerate = lazy(() => import('../pages/CertificateGenerate'))
+const CertificateDetail  = lazy(() => import('../pages/CertificateDetail'))
 const Reports       = lazy(() => import('../pages/Reports'))
 const CMS              = lazy(() => import('../pages/CMS'))
 const ParticipantProfile = lazy(() => import('../pages/ParticipantProfile'))
@@ -54,7 +56,9 @@ const adminRoutes = [
   { path: 'participants/:id', element: <ParticipantProfile /> },
   { path: 'payments',        element: <Payments /> },
   { path: 'results',         element: <Results /> },
-  { path: 'certificates',    element: <Certificates /> },
+  { path: 'certificates',         element: <Certificates /> },
+  { path: 'certificates/generate', element: <CertificateGenerate /> },
+  { path: 'certificates/:id',      element: <CertificateDetail /> },
   { path: 'reports',         element: <Reports /> },
   { path: 'cms',             element: <CMS /> },
   { path: 'settings',        element: <Settings /> },

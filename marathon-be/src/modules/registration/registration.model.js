@@ -86,7 +86,7 @@ const registrationSchema = new mongoose.Schema(
     emergencyContact: { type: emergencyContactSchema, required: true },
     tshirtSize: {
       type: String,
-      enum: ["XS", "S", "M", "L", "XL", "XXL"],
+      enum: ["XS", "S", "M", "L", "XL", "XXL", "3XL"],
     },
     address: { type: addressSchema },
     medicalInfo: { type: medicalInfoSchema },

@@ -38,7 +38,7 @@ const getTransporter = () => {
   return transporter;
 };
 
-const sendEmail = async ({ to, subject, html }) => {
+export const sendEmailFn = async ({ to, subject, html }) => {
   try {
     const from = `"${branding.appName}" <${env.emailFrom}>`;
     const info = await getTransporter().sendMail({ from, to, subject, html });
@@ -51,7 +51,7 @@ const sendEmail = async ({ to, subject, html }) => {
 
 export const sendWelcomeEmail = async (user) => {
   const { html, subject } = buildWelcomeEmail({ fullName: user.fullName });
-  return sendEmail({ to: user.email, subject, html });
+  return sendEmailFn({ to: user.email, subject, html });
 };
 
 export const sendRegistrationConfirmationEmail = async (
@@ -68,5 +68,9 @@ export const sendRegistrationConfirmationEmail = async (
     venueName: marathon.venue?.name,
     venueCity: marathon.venue?.city,
   });
-  return sendEmail({ to: user.email, subject, html });
+  return sendEmailFn({ to: user.email, subject, html });
+};
+
+export const sendCertificateEmail = async ({ to, subject, html }) => {
+  return sendEmailFn({ to, subject, html });
 };

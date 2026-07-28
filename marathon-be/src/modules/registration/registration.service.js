@@ -3,7 +3,17 @@ import Marathon from "../marathon/marathon.model.js";
 import { AppError } from "../../utils/AppError.js";
 
 export const createRegistration = async (userId, data) => {
-  const marathon = await Marathon.findById(data.marathon);
+  let marathon = null;
+  try {
+    marathon = await Marathon.findById(data.marathon);
+  } catch {
+    // data.marathon may be a slug or non-ObjectId string — try slug lookup
+    marathon = await Marathon.findOne({ slug: data.marathon });
+  }
+  if (!marathon) {
+    // Last resort: search by slug
+    marathon = await Marathon.findOne({ slug: data.marathon });
+  }
   if (!marathon) {
     throw new AppError("Marathon not found", 404);
   }
@@ -20,7 +30,12 @@ export const createRegistration = async (userId, data) => {
     throw new AppError("Registration window has closed", 400);
   }
 
-  const category = marathon.raceCategories.id(data.raceCategoryId);
+  let category = marathon.raceCategories.id(data.raceCategoryId);
+  if (!category) {
+    category = marathon.raceCategories.find(
+      (c) => c._id?.toString() === data.raceCategoryId || c.name === data.raceCategoryId
+    );
+  }
   if (!category) {
     throw new AppError("Selected race category not found in this marathon", 400);
   }
@@ -32,7 +47,7 @@ export const createRegistration = async (userId, data) => {
   const existing = await Registration.findOne({
     marathon: data.marathon,
     user: userId,
-    "raceCategory.categoryId": data.raceCategoryId,
+    "raceCategory.categoryId": category._id,
     status: { $in: ["pending", "confirmed"] },
   });
   if (existing) {
@@ -41,7 +56,7 @@ export const createRegistration = async (userId, data) => {
 
   const categoryCount = await Registration.countDocuments({
     marathon: data.marathon,
-    "raceCategory.categoryId": data.raceCategoryId,
+    "raceCategory.categoryId": category._id,
     status: { $in: ["pending", "confirmed"] },
   });
   if (categoryCount >= category.maxParticipants) {
@@ -73,7 +88,7 @@ export const createRegistration = async (userId, data) => {
 };
 
 export const getMyRegistrations = async (userId, query) => {
-  const { page = 1, limit = 10, sort = "-createdAt" } = query;
+  const { page = 1, limit = 50, sort = "-createdAt" } = query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -109,7 +124,7 @@ export const getRegistrationById = async (id) => {
 export const getAllRegistrations = async (query) => {
   const {
     page = 1,
-    limit = 10,
+    limit = 50,
     search,
     marathon,
     status,
@@ -132,7 +147,7 @@ export const getAllRegistrations = async (query) => {
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
 
-  const [registrations, total] = await Promise.all([
+  const [registrations, total, statusCounts] = await Promise.all([
     Registration.find(filter)
       .populate("marathon", "title slug eventDate venue.city venue.name")
       .populate("user", "fullName email phone")
@@ -140,7 +155,16 @@ export const getAllRegistrations = async (query) => {
       .skip(skip)
       .limit(parseInt(limit)),
     Registration.countDocuments(filter),
+    Registration.aggregate([
+      { $match: filter },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
   ]);
+
+  const counts = { confirmed: 0, pending: 0, cancelled: 0, withdrawn: 0 };
+  for (const s of statusCounts) {
+    if (s._id in counts) counts[s._id] = s.count;
+  }
 
   return {
     registrations,
@@ -148,6 +172,7 @@ export const getAllRegistrations = async (query) => {
     page: parseInt(page),
     limit: parseInt(limit),
     totalPages: Math.ceil(total / parseInt(limit)),
+    counts,
   };
 };
 

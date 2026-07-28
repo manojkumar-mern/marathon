@@ -53,7 +53,6 @@ function PageLoader({ onComplete }) {
         <div className="h-px overflow-hidden bg-steel">
           <span
             ref={barRef}
-            className="block h-full"
             className="block h-full bg-gradient-to-r from-volt to-ember"
           />
         </div>

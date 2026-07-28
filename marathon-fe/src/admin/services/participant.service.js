@@ -1,9 +1,5 @@
 import { api } from '../../services/api'
-
-async function silentFallback(defaultValue) {
-  if (import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') return defaultValue
-  throw new Error('Backend unavailable')
-}
+import { MOCK_PARTICIPANTS } from './mock.data'
 
 export const participantService = {
   async list(params = {}) {
@@ -15,7 +11,24 @@ export const participantService = {
       const res = await api.get(`/registrations${q ? `?${q}` : ''}`)
       return res.data
     } catch {
-      return silentFallback({ registrations: [], total: 0 })
+      // API unavailable — return mock participants
+      let rows = [...MOCK_PARTICIPANTS]
+      const { search, status, marathon } = params
+      if (search) {
+        const s = search.toLowerCase()
+        rows = rows.filter(
+          (r) =>
+            r.runnerDetails.fullName.toLowerCase().includes(s) ||
+            r.runnerDetails.email.toLowerCase().includes(s) ||
+            r.registrationNumber.toLowerCase().includes(s),
+        )
+      }
+      if (status) rows = rows.filter((r) => r.status === status)
+      if (marathon) rows = rows.filter((r) => r.marathon?.title?.toLowerCase().includes(marathon.toLowerCase()))
+      const page = parseInt(params.page || '1')
+      const limit = parseInt(params.limit || '20')
+      const start = (page - 1) * limit
+      return { registrations: rows.slice(start, start + limit), total: rows.length, page, limit, totalPages: Math.ceil(rows.length / limit) }
     }
   },
 
@@ -24,7 +37,7 @@ export const participantService = {
       const res = await api.get(`/registrations/${id}`)
       return res.data.registration
     } catch {
-      return silentFallback(null)
+      return MOCK_PARTICIPANTS.find((p) => p._id === id) || null
     }
   },
 

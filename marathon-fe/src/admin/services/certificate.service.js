@@ -1,8 +1,7 @@
 import { api } from '../../services/api'
 
 async function silentFallback(defaultValue) {
-  if (import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') return defaultValue
-  throw new Error('Backend unavailable')
+  return defaultValue
 }
 
 export const certificateService = {
@@ -30,7 +29,7 @@ export const certificateService = {
 
   async generate(data) {
     const res = await api.post('/certificates/generate', data)
-    return res.data.certificate
+    return res.data
   },
 
   async regenerate(id) {
@@ -40,5 +39,21 @@ export const certificateService = {
 
   async remove(id) {
     await api.delete(`/certificates/${id}`)
+  },
+
+  async preview(id) {
+    window.open(`/api/certificates/${id}/preview`, '_blank')
+  },
+
+  async download(id) {
+    const a = document.createElement('a')
+    a.href = `/api/certificates/${id}/preview?download=true`
+    a.download = `certificate-${id}.html`
+    a.click()
+  },
+
+  async sendEmail(id) {
+    const res = await api.post(`/certificates/${id}/email`)
+    return res.data
   },
 }

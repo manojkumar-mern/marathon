@@ -150,7 +150,7 @@ function AdminLoginGate() {
 
 /* ── Main guard ─────────────────────────────────────────────────── */
 function AdminProtectedRoute({ children }) {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, logout } = useAuth()
 
   // Development escape hatch — renders children directly without auth
   if (DEV_BYPASS) {
@@ -171,7 +171,7 @@ function AdminProtectedRoute({ children }) {
     return <AdminLoginGate />
   }
 
-  // Logged in but not admin → 403 screen
+  // Logged in but not admin → 403 screen with sign-out option
   if (user.role !== 'admin') {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-obsidian px-6">
@@ -179,9 +179,20 @@ function AdminProtectedRoute({ children }) {
         <p className="mt-3 text-sm text-muted">
           Your account (<strong className="text-sf-white">{user.email}</strong>) does not have admin access.
         </p>
-        <a href="/" className="mt-6 text-sm text-ember hover:underline">
-          Return to website
-        </a>
+        <p className="mt-2 text-xs text-muted-dim">
+          If your role was recently updated, sign out and sign back in.
+        </p>
+        <div className="mt-6 flex items-center gap-4">
+          <button
+            onClick={logout}
+            className="rounded-xl bg-ember px-5 py-2.5 text-sm font-bold text-obsidian transition-colors hover:bg-ember/80"
+          >
+            Sign out &amp; try again
+          </button>
+          <a href="/" className="text-sm text-muted hover:text-ember">
+            Return to website
+          </a>
+        </div>
       </div>
     )
   }

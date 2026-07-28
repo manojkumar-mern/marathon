@@ -1,43 +1,76 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { FaEllipsisVertical } from 'react-icons/fa6'
 
 function ActionMenu({ items = [], align = 'right' }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+  const [coords, setCoords] = useState({ top: 0, left: 0 })
+  const btnRef = useRef(null)
+  const menuRef = useRef(null)
+
+  const updatePosition = useCallback(() => {
+    if (!btnRef.current) return
+    const rect = btnRef.current.getBoundingClientRect()
+    const menuWidth = 160
+    let left = align === 'right' ? rect.right - menuWidth : rect.left
+    left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8))
+    setCoords({ top: rect.bottom + 4, left })
+  }, [align])
 
   useEffect(() => {
-    function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    if (!open) return
+    updatePosition()
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
     }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  }, [open, updatePosition])
 
   useEffect(() => {
+    function handleMousedown(e) {
+      if (
+        btnRef.current && !btnRef.current.contains(e.target) &&
+        menuRef.current && !menuRef.current.contains(e.target)
+      ) {
+        setOpen(false)
+      }
+    }
     function handleKey(e) {
       if (e.key === 'Escape') setOpen(false)
     }
-    if (open) document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
+    if (open) {
+      document.addEventListener('mousedown', handleMousedown)
+      document.addEventListener('keydown', handleKey)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleMousedown)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [open])
 
   if (!items.length) return null
 
   return (
-    <div className="relative" ref={ref}>
+    <>
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        ref={btnRef}
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((prev) => !prev)
+        }}
         className="rounded-lg p-1.5 text-muted-dim/50 transition-colors hover:bg-steel/40 hover:text-sf-white"
         aria-label="Actions"
         aria-expanded={open}
       >
         <FaEllipsisVertical size={14} />
       </button>
-      {open && (
+      {open && createPortal(
         <div
-          className={`absolute top-full z-20 mt-1 w-40 rounded-xl border border-steel/60 bg-carbon p-1 shadow-2xl shadow-black/30 ${
-            align === 'right' ? 'right-0' : 'left-0'
-          }`}
+          ref={menuRef}
+          className="fixed z-[999] w-40 rounded-xl border border-steel/60 bg-carbon p-1 shadow-2xl shadow-black/30"
+          style={{ top: coords.top, left: coords.left }}
         >
           {items.map((item, i) => (
             <button
@@ -57,9 +90,10 @@ function ActionMenu({ items = [], align = 'right' }) {
               {item.label}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
 

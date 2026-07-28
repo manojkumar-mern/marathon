@@ -1,0 +1,20 @@
+{
+  "event": "MARKETING_CAMPAIGN",
+  "timestamp": "2026-07-28T12:00:00.000Z",
+  "data": {
+    "campaign": "Early Bird Registration",
+    "audience": {
+      "segment": "past_participants",
+      "emails": ["runner1@example.com", "runner2@example.com"]
+    },
+    "message": {
+      "subject": "Early bird pricing ends soon!",
+      "previewText": "Save 20% on your next marathon registration.",
+      "offerCode": "EARLY20"
+    },
+    "marathon": {
+      "title": "Salem Yercaud Run 2027",
+      "eventDate": "2027-02-22T00:00:00.000Z"
+    }
+  }
+}

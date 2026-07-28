@@ -1,16 +1,18 @@
 import { body, param, query } from "express-validator";
 import { PHONE_REGEX } from "../../constants/regex.js";
 
-const tshirtSizes = ["XS", "S", "M", "L", "XL", "XXL"];
+const tshirtSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
 
 export const createRegistrationValidation = [
   body("marathon")
-    .isMongoId()
-    .withMessage("Valid marathon ID is required"),
+    .trim()
+    .notEmpty()
+    .withMessage("Marathon ID is required"),
 
   body("raceCategoryId")
-    .isMongoId()
-    .withMessage("Valid race category ID is required"),
+    .trim()
+    .notEmpty()
+    .withMessage("Race category ID is required"),
 
   body("runnerDetails.fullName")
     .trim()

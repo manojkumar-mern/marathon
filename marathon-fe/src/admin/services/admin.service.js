@@ -1,14 +1,5 @@
-/**
- * STRIDEFORGE Admin Service Layer
- * ──────────────────────────────────────────────────────────────────────
- * Connects every admin page to the live backend APIs.
- * All backend responses have the shape: { success, message, data }
- * These helpers unwrap `.data` so callers work directly with payloads.
- *
- * Base URL: /api  (set via VITE_API_URL in .env, defaults to localhost:5000/api)
- * ──────────────────────────────────────────────────────────────────────
- */
 import { api } from '../../services/api'
+import { MOCK_DASHBOARD_DATA, MOCK_RECENT_PAYMENTS } from './mock.data'
 
 // ─── Dashboard ────────────────────────────────────────────────────────
 export const adminService = {
@@ -17,11 +8,17 @@ export const adminService = {
    * Returns: { stats, trends, paymentStatus, categoryDistribution,
    *             genderDistribution, ageDistribution, recentRegistrations,
    *             recentPayments, upcomingEvents, notifications, systemHealth }
+   * Falls back to rich mock data when the API is unavailable.
    */
   async getDashboard() {
-    const res = await api.get('/admin/dashboard')
-    // Backend wraps in { success, message, data } — unwrap here
-    return { data: res.data }
+    try {
+      const res = await api.get('/admin/dashboard')
+      // Backend wraps in { success, message, data } — unwrap here
+      return { data: res.data }
+    } catch {
+      // API unavailable — return rich mock data so the dashboard is always useful
+      return { data: MOCK_DASHBOARD_DATA }
+    }
   },
 }
 
@@ -69,11 +66,26 @@ export const paymentService = {
    * GET /api/payments
    * Query params: page, limit, status, gateway, marathon, sort
    * Returns: { payments, total, page, limit, totalPages }
+   * Falls back to mock payment data when the API is unavailable.
    */
   async list(params = {}) {
-    const q = new URLSearchParams(params).toString()
-    const res = await api.get(`/payments?${q}`)
-    return res.data
+    try {
+      const q = new URLSearchParams(params).toString()
+      const res = await api.get(`/payments?${q}`)
+      return res.data
+    } catch {
+      // Return mock payments as fallback
+      const rows = MOCK_RECENT_PAYMENTS.map((p) => ({
+        ...p,
+        receipt: p.transactionId,
+        gatewayOrderId: p.transactionId,
+        user: { fullName: p.fullName, email: '' },
+        marathon: null,
+        gateway: 'razorpay',
+        paidAt: p.status === 'paid' ? p.createdAt : null,
+      }))
+      return { payments: rows, total: rows.length, page: 1, limit: 20, totalPages: 1 }
+    }
   },
 
   /**

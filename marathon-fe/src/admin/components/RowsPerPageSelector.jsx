@@ -1,4 +1,4 @@
-function RowsPerPageSelector({ value = 10, options = [10, 25, 50, 100], onChange }) {
+function RowsPerPageSelector({ value = 50, options = [10, 25, 50, 100], onChange }) {
   return (
     <div className="flex items-center gap-2 text-sm text-muted">
       <span className="text-xs">Rows</span>
