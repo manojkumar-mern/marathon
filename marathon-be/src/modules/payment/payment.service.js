@@ -1,6 +1,7 @@
 import Registration from "../registration/registration.model.js";
 import Marathon from "../marathon/marathon.model.js";
 import Payment from "../../models/Payment.js";
+import { n8n as n8nService } from "../../automation/n8n.service.js";
 import * as paymentProvider from "../../services/payment/payment.service.js";
 import { AppError } from "../../utils/AppError.js";
 import { env } from "../../config/env.js";
@@ -163,6 +164,25 @@ export const verifyPayment = async (userId, data) => {
   };
   await registration.save();
 
+  const marathon = await Marathon.findById(registration.marathon);
+  try {
+    await n8nService.sendRegistration({
+      participantName: registration.runnerDetails?.fullName,
+      email: registration.runnerDetails?.email,
+      phone: registration.runnerDetails?.phone,
+      marathonName: marathon ? marathon.title : "Unknown Marathon",
+      eventDate: marathon ? marathon.eventDate : null,
+      registrationId: registration._id,
+      paymentId: payment._id,
+      bibNumber: registration.bibNumber || null,
+      amountPaid: payment.amount,
+      paymentStatus: registration.payment?.status || registration.status,
+    });
+  } catch (error) {
+    console.error("[n8n-automation-error] Failed to trigger registration success webhook from verifyPayment:", error);
+  }
+
+
   return {
     paymentId: payment._id,
     registrationId: registration._id,
@@ -216,6 +236,24 @@ export const handleWebhook = async (rawBody, signature, event) => {
           status: REGISTRATION_PAYMENT_STATUS.COMPLETED,
         };
         await registration.save();
+
+        const marathon = await Marathon.findById(registration.marathon);
+        try {
+          await n8nService.sendRegistration({
+            participantName: registration.runnerDetails?.fullName,
+            email: registration.runnerDetails?.email,
+            phone: registration.runnerDetails?.phone,
+            marathonName: marathon ? marathon.title : "Unknown Marathon",
+            eventDate: marathon ? marathon.eventDate : null,
+            registrationId: registration._id,
+            paymentId: payment._id,
+            bibNumber: registration.bibNumber || null,
+            amountPaid: payment.amount,
+            paymentStatus: registration.payment?.status || registration.status,
+          });
+        } catch (error) {
+          console.error("[n8n-automation-error] Failed to trigger registration success webhook from handleWebhook:", error);
+        }
       }
     }
   }

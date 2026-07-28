@@ -1,6 +1,7 @@
 import Registration from "./registration.model.js";
 import Marathon from "../marathon/marathon.model.js";
 import { AppError } from "../../utils/AppError.js";
+import { n8n as n8nService } from "../../automation/n8n.service.js";
 
 export const createRegistration = async (userId, data) => {
   let marathon = null;

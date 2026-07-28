@@ -64,4 +64,12 @@ export const n8n = {
       data,
     });
   },
+
+  async sendEventReminder(data) {
+    return sendToWebhook("reminder", {
+      event: "EVENT_REMINDER",
+      timestamp: new Date().toISOString(),
+      data,
+    });
+  },
 };

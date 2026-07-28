@@ -1,0 +1,131 @@
+{
+  "name": "STRIDEFORGE - Reusable WhatsApp Service",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "e2ba7d4c-e87a-429a-9e1e-c28df053d2d1",
+      "name": "On Call Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_ACCESS_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.to }}"
+            },
+            {
+              "name": "type",
+              "value": "template"
+            },
+            {
+              "name": "template",
+              "value": "={{ JSON.stringify($json.template) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9a38fcd2-026d-472e-84d2-28df053df2a5",
+      "name": "Meta WhatsApp API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        480,
+        240
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "meta-whatsapp-token",
+          "name": "Meta WhatsApp Token Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  success: true,\n  deliveryStatus: 'sent_to_gateway',\n  timestamp: new Date().toISOString(),\n  messageId: $('Meta WhatsApp API Call').item?.json?.messages?.[0]?.id || null\n};"
+      },
+      "id": "2ba3f721-0a6d-472e-84d2-28df053df2b6",
+      "name": "Store Delivery Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "WhatsApp API Request Failed"
+      },
+      "id": "c1f6b8a2-23c2-482a-bc95-09312b91c137",
+      "name": "Log WhatsApp Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        700,
+        340
+      ]
+    }
+  ],
+  "connections": {
+    "On Call Trigger": {
+      "main": [
+        [
+          {
+            "node": "Meta WhatsApp API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WhatsApp API Call": {
+      "main": [
+        [
+          {
+            "node": "Store Delivery Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log WhatsApp Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "meta": {
+    "instanceId": "local"
+  }
+}

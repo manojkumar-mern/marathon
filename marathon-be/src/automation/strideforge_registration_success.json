@@ -1,0 +1,167 @@
+{
+  "name": "STRIDEFORGE - Registration Success",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "registration",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a9a3b8cd-6101-4be6-a45e-4bb59a3c8612",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Webhook received successfully\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "97e682d2-28df-41c1-8418-e3c3b0dfb2f3",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        420,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.data.participantName }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.data.email }}",
+              "operation": "isNotEmpty"
+            },
+            {
+              "value1": "={{ $json.body.data.registrationId }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "e674cb18-6bb6-455b-b997-6a4a15998a44",
+      "name": "Validate Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        420,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $env.SMTP_FROM_EMAIL || \"no-reply@strideforge.com\" }}",
+        "toEmail": "={{ $json.body.data.email }}",
+        "subject": "=STRIDEFORGE - Registration Confirmed: {{ $json.body.data.marathonName }}",
+        "html": "=<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"utf-8\">\n  <style>\n    body { font-family: Arial, sans-serif; background-color: #0f172a; color: #f1f5f9; padding: 20px; margin: 0; }\n    .card { background-color: #1e293b; border-radius: 8px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #334155; }\n    .header { text-align: center; border-bottom: 1px solid #334155; padding-bottom: 20px; }\n    .logo { font-size: 24px; font-weight: bold; color: #f97316; letter-spacing: 2px; text-decoration: none; }\n    .title { font-size: 20px; margin-top: 20px; color: #ffffff; text-align: center; font-weight: 800; }\n    .details { margin-top: 30px; background-color: #0f172a; border-radius: 6px; padding: 15px; border: 1px solid #334155; }\n    .detail-row { display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding: 10px 0; font-size: 14px; }\n    .detail-row:last-child { border-bottom: none; }\n    .detail-label { color: #94a3b8; }\n    .detail-value { color: #f8fafc; font-weight: bold; }\n    .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #334155; padding-top: 20px; }\n  </style>\n</head>\n<body>\n  <div class=\"card\">\n    <div class=\"header\">\n      <div class=\"logo\">STRIDEFORGE</div>\n    </div>\n    <div class=\"title\">REGISTRATION CONFIRMED</div>\n    <p style=\"font-size: 15px; line-height: 1.5; color: #e2e8f0;\">Hi <strong>{{ $json.body.data.participantName }}</strong>,</p>\n    <p style=\"font-size: 14px; line-height: 1.5; color: #cbd5e1;\">Your registration for the <strong>{{ $json.body.data.marathonName }}</strong> has been successfully completed and paid!</p>\n    \n    <div class=\"details\">\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Registration ID</span>\n        <span class=\"detail-value\">{{ $json.body.data.registrationId }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Event Date</span>\n        <span class=\"detail-value\">{{ new Date($json.body.data.eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Payment ID</span>\n        <span class=\"detail-value\">{{ $json.body.data.paymentId }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Amount Paid</span>\n        <span class=\"detail-value\">₹{{ $json.body.data.amountPaid }}</span>\n      </div>\n      <div class=\"detail-row\">\n        <span class=\"detail-label\">Bib Number</span>\n        <span class=\"detail-value\">{{ $json.body.data.bibNumber || 'To be allocated' }}</span>\n      </div>\n    </div>\n\n    <p style="margin-top: 30px; font-size: 14px; line-height: 1.5; color: #cbd5e1;\">If you have any questions or require support, please contact us at <a href=\"mailto:support@strideforge.com\" style=\"color: #f97316; text-decoration: none;\">support@strideforge.com</a>.</p>\n    \n    <div class=\"footer\">\n      Thank you for being part of the STRIDEFORGE community.<br>\n      © 2026 STRIDEFORGE. All rights reserved.\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "id": "2ba3f721-0a6d-472e-84d2-28df053df2a5",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        660,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "strideforge-whatsapp-service-id",
+        "options": {},
+        "mode": "id",
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "to",
+              "value": "={{ $json.body.data.phone }}"
+            },
+            {
+              "name": "template",
+              "value": "={\n  \"name\": \"registration_confirmation\",\n  \"language\": {\n    \"code\": \"en_US\"\n  },\n  \"components\": [\n    {\n      \"type\": \"body\",\n      \"parameters\": [\n        { \"type\": \"text\", \"text\": \"{{ $json.body.data.participantName }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.body.data.marathonName }}\" },\n        { \"type\": \"text\", \"text\": \"{{ new Date($json.body.data.eventDate).toLocaleDateString('en-IN') }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.body.data.registrationId }}\" },\n        { \"type\": \"text\", \"text\": \"{{ $json.body.data.bibNumber || 'To be allocated' }}\" }\n      ]\n    }\n  ]\n}"
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7a8b-9c0d-e1f2a3b4c5d6",
+      "name": "Send WhatsApp Notification",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        660,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "Validation failed: Missing required fields"
+      },
+      "id": "c1f6b8a2-23c2-482a-bc95-09312b91c137",
+      "name": "Log Validation Error",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        660,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Validate Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send WhatsApp Notification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "meta": {
+    "instanceId": "local"
+  }
+}
