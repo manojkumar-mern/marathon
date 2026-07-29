@@ -1,10 +1,60 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FaBars, FaXmark } from 'react-icons/fa6'
 import { Link, NavLink } from 'react-router-dom'
-import { navigationItems } from '../../../data/platform'
 import BrandMark from '../../common/BrandMark'
 import Button from '../../common/Button'
 import useEdgeSwipe from '../../../hooks/useEdgeSwipe'
+
+const menuItems = [
+  {
+    label: 'Home',
+    to: '/',
+  },
+  {
+    label: 'Events',
+    submenu: [
+      { label: 'Upcoming Events', to: '/events/upcoming' },
+      { label: 'Past Events', to: '/events/past' },
+      { label: 'Event Calendar', to: '/schedule' },
+    ],
+  },
+  {
+    label: 'Gallery',
+    submenu: [
+      { label: 'Photos', to: '/gallery' },
+      { label: 'Videos', to: '/gallery' },
+    ],
+  },
+  {
+    label: 'Results',
+    submenu: [
+      { label: 'Race Results', to: '/login' },
+      { label: 'Leaderboard', to: '/login' },
+    ],
+  },
+  {
+    label: 'Certificates',
+    submenu: [
+      { label: 'Download Certificate', to: '/login' },
+      { label: 'Verify Certificate', to: '/login' },
+    ],
+  },
+  {
+    label: 'About',
+    submenu: [
+      { label: 'About STRIDEFORGE', to: '/about' },
+      { label: 'Our Mission', to: '/about' },
+      { label: 'Organizers', to: '/about' },
+    ],
+  },
+  {
+    label: 'Support',
+    submenu: [
+      { label: 'FAQ', to: '/faq' },
+      { label: 'Contact Us', to: '/contact' },
+    ],
+  },
+]
 
 function Navbar() {
   const [isOpen, setIsOpen]       = useState(false)
@@ -51,10 +101,10 @@ function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 z-50 transition-all duration-500 border-b ${
           isScrolled
-            ? 'border-b border-steel bg-obsidian/95 shadow-2xl shadow-black/50 backdrop-blur-md'
-            : 'bg-transparent'
+            ? 'border-white/10 bg-obsidian/75 shadow-lg shadow-black/25 backdrop-blur-md'
+            : 'bg-transparent border-transparent'
         }`}
       >
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
@@ -63,27 +113,72 @@ function Navbar() {
           {/* Desktop nav links */}
           <nav aria-label="Primary navigation" className="hidden lg:block">
             <ul className="flex items-center gap-8">
-              {navigationItems.map((item) => (
-                <li key={item.to}>
-                  <NavLink
-                    className={({ isActive }) =>
-                      `text-sm font-medium tracking-wide transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
-                        isActive
-                          ? 'text-sf-white'
-                          : 'text-muted hover:text-sf-white'
-                      }`
-                    }
-                    to={item.to}
-                  >
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
+              {menuItems.map((item) => {
+                if (item.submenu) {
+                  return (
+                    <li key={item.label} className="group relative py-2">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 text-sm font-medium tracking-wide text-muted hover:text-sf-white transition-colors duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                      >
+                        {item.label}
+                        <svg
+                          className="size-3 opacity-60 transition-transform duration-200 group-hover:rotate-180"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {/* Dropdown Menu */}
+                      <div className="absolute left-1/2 top-full z-50 mt-1 w-52 -translate-x-1/2 scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
+                        <div className="rounded-2xl border border-white/10 bg-obsidian/95 p-2 shadow-2xl backdrop-blur-xl">
+                          {item.submenu.map((sub) => (
+                            <Link
+                              key={sub.label}
+                              to={sub.to}
+                              className="block rounded-xl px-4 py-2.5 text-xs font-semibold text-muted hover:bg-white/5 hover:text-sf-white transition-colors"
+                            >
+                              {sub.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </li>
+                  )
+                }
+
+                return (
+                  <li key={item.label}>
+                    <NavLink
+                      className={({ isActive }) =>
+                        `text-sm font-medium tracking-wide transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
+                          isActive
+                            ? 'text-sf-white'
+                            : 'text-muted hover:text-sf-white'
+                        }`
+                      }
+                      to={item.to}
+                      end
+                    >
+                      {item.label}
+                    </NavLink>
+                  </li>
+                )
+              })}
             </ul>
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden lg:block">
+          {/* Desktop CTA & Login */}
+          <div className="hidden lg:flex items-center gap-6">
+            <Link
+              to="/login"
+              className="text-sm font-medium text-muted hover:text-sf-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+            >
+              Login
+            </Link>
             <Button to="/register">Register Now</Button>
           </div>
 
@@ -102,7 +197,7 @@ function Navbar() {
         </div>
       </header>
 
-      {/* Mobile overlay backdrop — rendered outside <header> so backdrop-filter never corrupts fixed positioning */}
+      {/* Mobile overlay backdrop */}
       <div
         aria-hidden={!isOpen}
         className={`fixed inset-0 z-40 bg-obsidian/80 backdrop-blur-sm transition-opacity duration-300 lg:hidden ${
@@ -111,7 +206,7 @@ function Navbar() {
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Mobile slide-in drawer — rendered outside <header> for same reason */}
+      {/* Mobile slide-in drawer */}
       <aside
         id="mobile-menu"
         aria-label="Mobile navigation"
@@ -131,29 +226,58 @@ function Navbar() {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-6 [touch-action:pan-y]" aria-label="Mobile primary navigation">
-          <ul className="mt-8 space-y-1">
-            {navigationItems.map((item) => (
-              <li key={item.to}>
-                <Link
-                  className="block rounded-xl px-4 py-3.5 text-lg font-medium text-sf-white/80 transition-colors hover:bg-steel hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
-                  to={item.to}
-                  onClick={() => setIsOpen(false)}
-                >
-                  {item.label}
-                </Link>
+        <nav className="flex-1 overflow-y-auto px-6 py-4 [touch-action:pan-y]" aria-label="Mobile primary navigation">
+          <ul className="space-y-4">
+            {menuItems.map((item) => (
+              <li key={item.label}>
+                {item.submenu ? (
+                  <div>
+                    <span className="block px-4 py-1 text-xs font-bold uppercase tracking-wider text-ember">
+                      {item.label}
+                    </span>
+                    <ul className="mt-1 pl-4 space-y-1 border-l border-white/5">
+                      {item.submenu.map((sub) => (
+                        <li key={sub.label}>
+                          <Link
+                            className="block rounded-xl px-4 py-2 text-sm font-medium text-sf-white/80 transition-colors hover:bg-steel hover:text-sf-white"
+                            to={sub.to}
+                            onClick={() => setIsOpen(false)}
+                          >
+                            {sub.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <Link
+                    className="block rounded-xl px-4 py-3 text-base font-semibold text-sf-white/90 transition-colors hover:bg-steel hover:text-sf-white"
+                    to={item.to}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
         </nav>
 
-        <Button
-          className="mx-6 mb-6 mt-auto"
-          to="/register"
-          onClick={() => setIsOpen(false)}
-        >
-          Register for an Event
-        </Button>
+        <div className="flex flex-col gap-3 p-6 mt-auto border-t border-steel">
+          <Link
+            to="/login"
+            className="flex h-12 items-center justify-center rounded-full border border-steel text-sm font-semibold text-sf-white hover:bg-steel transition-colors"
+            onClick={() => setIsOpen(false)}
+          >
+            Login
+          </Link>
+          <Button
+            to="/register"
+            onClick={() => setIsOpen(false)}
+          >
+            Register Now
+          </Button>
+        </div>
       </aside>
     </>
   )
