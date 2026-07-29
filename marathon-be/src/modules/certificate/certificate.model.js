@@ -18,12 +18,26 @@ const certificateSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
       required: true,
-      unique: true,
     },
     marathon: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Marathon",
       required: true,
+    },
+    type: {
+      type: String,
+      enum: ["participation", "finisher", "winner", "volunteer", "organizer"],
+      required: true,
+      default: "finisher",
+    },
+    template: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CertificateTemplate",
+    },
+    result: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Result",
+      default: null,
     },
     // Denormalised snapshot
     participant: {
@@ -42,7 +56,7 @@ const certificateSchema = new mongoose.Schema(
     qrCode: { type: String, trim: true },
     status: {
       type: String,
-      enum: ["pending", "generated", "downloaded", "emailed"],
+      enum: ["pending", "generated", "downloaded", "emailed", "revoked"],
       default: "pending",
     },
     generatedAt: { type: Date },
@@ -57,6 +71,8 @@ certificateSchema.pre("validate", function () {
   }
 });
 
+// Compound unique index to prevent duplicate certificates of the same type for a registration
+certificateSchema.index({ registration: 1, type: 1 }, { unique: true });
 certificateSchema.index({ marathon: 1 });
 
 const Certificate = mongoose.model("Certificate", certificateSchema);

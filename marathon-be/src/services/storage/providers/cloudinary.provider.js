@@ -31,6 +31,28 @@ export const uploadImage = async (file, { folder, publicId } = {}) => {
   };
 };
 
+export const uploadFile = async (file, { folder, publicId, filename } = {}) => {
+  const buffer = Buffer.isBuffer(file) ? file : Buffer.from(file.buffer || file);
+  try {
+    const result = await uploadStream(buffer, {
+      folder: folder || "documents",
+      public_id: publicId || filename,
+      resource_type: "auto",
+      secure: true,
+    });
+
+    return {
+      publicId: result.public_id,
+      secureUrl: result.secure_url,
+      format: result.format,
+      bytes: result.bytes,
+    };
+  } catch (err) {
+    console.error(`[Cloudinary] Upload failed: ${err.message}`);
+    throw err;
+  }
+};
+
 export const uploadMultipleImages = async (files, { folder } = {}) => {
   const results = await Promise.all(
     files.map((file) => uploadImage(file, { folder }))

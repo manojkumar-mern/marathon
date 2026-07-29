@@ -6,6 +6,10 @@ export const uploadImage = (file, options) => {
   return provider.uploadImage(file, options);
 };
 
+export const uploadFile = (file, options) => {
+  return provider.uploadFile(file, options);
+};
+
 export const uploadMultipleImages = (files, options) => {
   return provider.uploadMultipleImages(files, options);
 };

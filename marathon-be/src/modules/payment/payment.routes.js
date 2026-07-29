@@ -24,6 +24,11 @@ router.post(
   paymentController.verify
 );
 
+router.post(
+  "/webhook",
+  paymentController.handleWebhook
+);
+
 router.get(
   "/me",
   authenticateUser,

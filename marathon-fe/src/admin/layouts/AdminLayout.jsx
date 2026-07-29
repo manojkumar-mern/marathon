@@ -18,7 +18,7 @@ function AdminLayout() {
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         />
         <div
-          className={`flex flex-1 flex-col transition-all duration-200 ${
+          className={`flex flex-1 flex-col min-w-0 transition-all duration-200 ${
             sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-60'
           }`}
         >

@@ -9,6 +9,7 @@ import DataTable from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { resultService } from '../services/result.service'
+import { eventService } from '../services/event.service'
 import useTableState from '../hooks/useTableState'
 import { BRAND } from '../../config/brand'
 
@@ -42,7 +43,7 @@ const columns = [
     ),
   },
   {
-    key: 'runner',
+    key: 'runnerDetails',
     label: 'Participant',
     render: (val, row) => <RunnerDisplay val={val} row={row} />,
   },
@@ -136,6 +137,50 @@ function AdminResults() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
+  const [events, setEvents] = useState([])
+  const [publishEvent, setPublishEvent] = useState('')
+  const [publishing, setPublishing] = useState(false)
+
+  useEffect(() => {
+    async function loadEvents() {
+      try {
+        const res = await eventService.list({ all: 'true', limit: 100 })
+        setEvents(res.marathons || [])
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    loadEvents()
+  }, [])
+
+  async function handlePublishResults() {
+    if (!publishEvent) return alert('Select an event first')
+    setPublishing(true)
+    try {
+      await resultService.publish(publishEvent)
+      alert('Successfully published results and updated rankings!')
+      fetchResults()
+    } catch (err) {
+      alert(err.message || 'Failed to publish results')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  async function handleUnpublishResults() {
+    if (!publishEvent) return alert('Select an event first')
+    setPublishing(true)
+    try {
+      await resultService.unpublish(publishEvent)
+      alert('Successfully unpublished results!')
+      fetchResults()
+    } catch (err) {
+      alert(err.message || 'Failed to unpublish results')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
   const fetchResults = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -219,14 +264,45 @@ function AdminResults() {
           ]}
         />
 
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-steel/60 bg-carbon p-4">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold text-muted-dim">Manage Results Publishing</span>
+            <select
+              value={publishEvent}
+              onChange={(e) => setPublishEvent(e.target.value)}
+              className="rounded-lg border border-steel/60 bg-obsidian px-3 py-2 text-sm text-sf-white outline-none focus:border-ember"
+            >
+              <option value="">-- Select Event --</option>
+              {events.map((e) => (
+                <option key={e._id} value={e._id}>{e.title}</option>
+              ))}
+            </select>
+          </div>
           <button
-            onClick={() => navigate('/admin/results/upload')}
-            className="inline-flex items-center gap-2 rounded-xl bg-ember px-5 py-3 text-sm font-semibold text-obsidian transition-colors hover:bg-ember-deep"
+            onClick={handlePublishResults}
+            disabled={publishing || !publishEvent}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
           >
-            <FaUpload size={14} />
-            Upload Results
+            <FaCircleCheck size={14} />
+            {publishing ? 'Publishing...' : 'Publish Official Results'}
           </button>
+          <button
+            onClick={handleUnpublishResults}
+            disabled={publishing || !publishEvent}
+            className="inline-flex items-center gap-2 rounded-xl border border-steel bg-obsidian px-5 py-3 text-sm font-semibold text-muted-dim transition-colors hover:bg-steel disabled:opacity-50"
+          >
+            <FaCircleXmark size={14} />
+            {publishing ? 'Unpublishing...' : 'Unpublish Results'}
+          </button>
+          <div className="ml-auto">
+            <button
+              onClick={() => navigate('/admin/results/upload')}
+              className="inline-flex items-center gap-2 rounded-xl bg-ember px-5 py-3 text-sm font-semibold text-obsidian transition-colors hover:bg-ember-deep"
+            >
+              <FaUpload size={14} />
+              Upload Results
+            </button>
+          </div>
         </div>
       </PageContainer>
 

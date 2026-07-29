@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import { config } from "dotenv";
 import bcrypt from "bcrypt";
+import RegistrationModel from "../modules/registration/registration.model.js";
+import MarathonModel from "../modules/marathon/marathon.model.js";
+import UserModel from "../models/User.js";
 
 config();
 

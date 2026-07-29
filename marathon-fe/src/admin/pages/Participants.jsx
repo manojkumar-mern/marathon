@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   FaUsers, FaCircleCheck, FaClock, FaCircleXmark,
   FaEye, FaTrashCan, FaFileExport, FaFileArrowDown, FaShirt,
+  FaCertificate, FaDownload,
 } from 'react-icons/fa6'
 import SEO from '../../components/common/SEO'
 import PageContainer from '../components/PageContainer'
@@ -10,6 +11,7 @@ import DataTable from '../components/DataTable'
 import StatusBadge from '../components/StatusBadge'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { participantService } from '../services/participant.service'
+import { certificateService } from '../services/certificate.service'
 import { MOCK_TSHIRT_SIZES } from '../services/mock.data'
 import useTableState from '../hooks/useTableState'
 import { BRAND } from '../../config/brand'
@@ -21,6 +23,13 @@ const columns = [
     label: 'Reg #',
     render: (val) => (
       <span className="font-mono text-xs text-ember">{val || '—'}</span>
+    ),
+  },
+  {
+    key: 'bibNumber',
+    label: 'Bib #',
+    render: (val) => (
+      <span className="font-mono text-xs font-semibold text-sf-white">{val || 'TBD'}</span>
     ),
   },
   {
@@ -250,6 +259,53 @@ function AdminParticipants() {
     }
   }
 
+  const [actionLoading, setActionLoading] = useState(false)
+
+  async function handleGenerateCertificate(row) {
+    setActionLoading(true)
+    try {
+      const res = await certificateService.generate({ registrationId: row._id, type: 'finisher' })
+      alert(`Successfully generated certificate for ${row.runnerDetails?.fullName || 'participant'}!`)
+      fetchParticipants()
+    } catch (err) {
+      alert(err.message || 'Failed to generate certificate. Ensure results are published first.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleViewCertificate(row) {
+    setActionLoading(true)
+    try {
+      const res = await certificateService.list({ search: row.registrationNumber })
+      if (res.certificates && res.certificates.length > 0) {
+        certificateService.preview(res.certificates[0]._id)
+      } else {
+        alert('No certificate generated yet for this participant.')
+      }
+    } catch (err) {
+      alert('Error fetching certificate details.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function handleDownloadCertificate(row) {
+    setActionLoading(true)
+    try {
+      const res = await certificateService.list({ search: row.registrationNumber })
+      if (res.certificates && res.certificates.length > 0) {
+        certificateService.download(res.certificates[0]._id)
+      } else {
+        alert('No certificate generated yet for this participant.')
+      }
+    } catch (err) {
+      alert('Error downloading certificate.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   async function handleExportCSV() {
     setExporting(true)
     try {
@@ -343,6 +399,24 @@ function AdminParticipants() {
               label: 'View',
               icon: FaEye,
               onClick: (row) => navigate(`/admin/participants/${row._id}`),
+            },
+            {
+              label: 'Generate Cert',
+              icon: FaCertificate,
+              onClick: (row) => handleGenerateCertificate(row),
+              disabled: (row) => row.status !== 'confirmed' || actionLoading,
+            },
+            {
+              label: 'View Cert',
+              icon: FaEye,
+              onClick: (row) => handleViewCertificate(row),
+              disabled: () => actionLoading,
+            },
+            {
+              label: 'Download Cert',
+              icon: FaDownload,
+              onClick: (row) => handleDownloadCertificate(row),
+              disabled: () => actionLoading,
             },
             {
               label: 'Delete',

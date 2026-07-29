@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Marathon from "../modules/marathon/marathon.model.js";
 import Registration from "../modules/registration/registration.model.js";
 import ReminderLog from "../models/ReminderLog.js";
@@ -21,6 +22,17 @@ export const reminderScheduler = {
    */
   async processReminders() {
     console.log("[ReminderScheduler] Starting reminder processing cycle...");
+    let auto = null;
+    try {
+      auto = await mongoose.model("Automation").findOne({ name: "Reminder Scheduler" });
+    } catch (e) {}
+
+    if (auto && auto.status === "disabled") {
+      console.log("[ReminderScheduler] Reminder Scheduler is disabled — skipping execution");
+      return;
+    }
+
+    const startTime = Date.now();
     try {
       const activeMarathons = await Marathon.find({
         status: "published",
@@ -34,9 +46,37 @@ export const reminderScheduler = {
         await this.processMarathonReminders(marathon);
       }
 
+      const duration = Date.now() - startTime;
+      if (auto) {
+        await mongoose.model("AutomationLog").create({
+          automation: auto._id,
+          eventName: "REMINDER_SCHEDULER_CYCLE",
+          automationType: "scheduler",
+          status: "success",
+          processingDuration: duration,
+        });
+        auto.lastExecutedAt = new Date();
+        auto.successCount += 1;
+        await auto.save();
+      }
+
       console.log("[ReminderScheduler] Reminder processing cycle finished successfully.");
     } catch (err) {
       console.error("[ReminderScheduler] Error during scheduler execution:", err.message);
+      const duration = Date.now() - startTime;
+      if (auto) {
+        await mongoose.model("AutomationLog").create({
+          automation: auto._id,
+          eventName: "REMINDER_SCHEDULER_CYCLE",
+          automationType: "scheduler",
+          status: "failed",
+          errorMessage: err.message,
+          processingDuration: duration,
+        });
+        auto.lastExecutedAt = new Date();
+        auto.failureCount += 1;
+        await auto.save();
+      }
     }
   },
 

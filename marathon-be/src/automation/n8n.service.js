@@ -13,20 +13,71 @@ function logError(context, error) {
   console.error(`[n8n] ${context} failed — ${msg}`);
 }
 
+import { Automation, AutomationLog } from "./automation.model.js";
+
 async function sendToWebhook(endpoint, payload) {
   if (!BASE_URL) {
     console.warn("[n8n] N8N_WEBHOOK_URL is not set — skipping automation");
     return null;
   }
 
+  let auto = null;
+  try {
+    auto = await Automation.findOne({ name: "N8N Webhook Service" });
+  } catch (err) {
+    console.warn("[n8n] Automation model lookup failed — continuing default active behavior", err.message);
+  }
+  if (auto && auto.status === "disabled") {
+    console.log("[n8n] N8N Webhook Service is disabled — skipping");
+    return null;
+  }
+
+  const startTime = Date.now();
   try {
     const url = `${BASE_URL.replace(/\/+$/, "")}/${endpoint}`;
     const { data } = await axios.post(url, payload, {
       headers: { "Content-Type": "application/json" },
       timeout: 10_000,
     });
+
+    const duration = Date.now() - startTime;
+    if (auto) {
+      await AutomationLog.create({
+        automation: auto._id,
+        eventName: payload.event || endpoint.toUpperCase(),
+        automationType: "webhook",
+        status: "success",
+        processingDuration: duration,
+        payload,
+      });
+      auto.lastExecutedAt = new Date();
+      auto.successCount += 1;
+      await auto.save();
+    }
     return data;
   } catch (error) {
+    const duration = Date.now() - startTime;
+    const msg = error?.response?.data
+      ? typeof error.response.data === "string"
+        ? error.response.data
+        : JSON.stringify(error.response.data)
+      : error.message;
+
+    if (auto) {
+      await AutomationLog.create({
+        automation: auto._id,
+        eventName: payload.event || endpoint.toUpperCase(),
+        automationType: "webhook",
+        status: "failed",
+        errorMessage: msg,
+        processingDuration: duration,
+        payload,
+      });
+      auto.lastExecutedAt = new Date();
+      auto.failureCount += 1;
+      await auto.save();
+    }
+
     logError(endpoint, error);
     return null;
   }

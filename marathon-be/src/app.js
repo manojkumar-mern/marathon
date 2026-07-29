@@ -32,7 +32,7 @@ const corsOptions = {
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(compression());
-app.use(morgan("dev"));
+app.use(morgan(env.isProduction ? "combined" : "dev"));
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -45,14 +45,21 @@ app.use("/api/auth", authLimiter);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 2000,
+  max: env.isProduction ? 5000 : 2000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: "Too many requests. Please try again later." },
 });
 app.use("/api", apiLimiter);
 
-app.use(express.json({ limit: "10kb" }));
+app.use(
+  express.json({
+    limit: "10kb",
+    verify: (req, res, buf) => {
+      req.rawBody = buf.toString();
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(mongoSanitize);
 

@@ -86,7 +86,7 @@ export async function autoSeed() {
     defaultUser = await User.create({
       fullName: "Default Runner",
       email: "default@marathon.local",
-      password: "password123",
+      password: process.env.DEFAULT_USER_PASSWORD || "password123",
       phone: "9999999999",
       role: "user",
     });

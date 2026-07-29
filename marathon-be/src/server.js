@@ -3,6 +3,17 @@ import connectDB from "./config/db.js";
 import { env } from "./config/env.js";
 import mongoose from "mongoose";
 import { autoSeed } from "./seed/auto-seed.js";
+import { reminderScheduler } from "./services/reminder.service.js";
+
+// Handle uncaught exceptions and unhandled rejections early
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
 
 const start = async () => {
   await connectDB();
@@ -16,22 +27,37 @@ const start = async () => {
     console.log(`🚀 Server running on http://localhost:${env.port} (${env.nodeEnv})`);
   });
 
+  // Start periodic reminder processing every hour (Missing automation triggers)
+  const reminderInterval = setInterval(() => {
+    reminderScheduler.processReminders().catch((err) => {
+      console.error("Error processing reminders in scheduled trigger:", err);
+    });
+  }, 60 * 60 * 1000);
+
   const gracefulShutdown = async (signal) => {
     console.log(`\n${signal} received. Shutting down gracefully...`);
+    
+    // Clear scheduled reminder interval (Timeout/Interval cleanup)
+    clearInterval(reminderInterval);
+
+    const shutdownTimeout = setTimeout(() => {
+      console.error("Forced shutdown after timeout.");
+      process.exit(1);
+    }, 10000);
+
     server.close(async () => {
+      clearTimeout(shutdownTimeout); // Clear timeout when closed successfully
       await mongoose.connection.close();
       console.log("MongoDB connection closed.");
       process.exit(0);
     });
-
-    setTimeout(() => {
-      console.error("Forced shutdown after timeout.");
-      process.exit(1);
-    }, 10000);
   };
 
   process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 };
 
-start();
+start().catch((err) => {
+  console.error("Critical: Server failed to start:", err);
+  process.exit(1);
+});

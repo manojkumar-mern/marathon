@@ -1,6 +1,7 @@
 import Marathon from "./marathon.model.js";
 import Registration from "../registration/registration.model.js";
 import { AppError } from "../../utils/AppError.js";
+import { escapeRegExp } from "../../utils/regex.js";
 
 export const createMarathon = async (data) => {
   if (data.slug) {
@@ -39,23 +40,26 @@ export const getAllMarathons = async (query) => {
   if (!all) filter.status = "published";
 
   if (search) {
+    const escapedSearch = escapeRegExp(search);
     filter.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { shortDescription: { $regex: search, $options: "i" } },
-      { "venue.city": { $regex: search, $options: "i" } },
-      { eventCode: { $regex: search, $options: "i" } },
+      { title: { $regex: escapedSearch, $options: "i" } },
+      { shortDescription: { $regex: escapedSearch, $options: "i" } },
+      { "venue.city": { $regex: escapedSearch, $options: "i" } },
+      { eventCode: { $regex: escapedSearch, $options: "i" } },
     ];
   }
 
-  if (city) filter["venue.city"] = { $regex: city, $options: "i" };
+  if (city) filter["venue.city"] = { $regex: escapeRegExp(city), $options: "i" };
   if (status) filter.status = status;
-  if (eventCode) filter.eventCode = { $regex: eventCode, $options: "i" };
+  if (eventCode) filter.eventCode = { $regex: escapeRegExp(eventCode), $options: "i" };
   if (featured !== undefined) filter.featured = featured === "true";
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10));
+  const skip = (pageNum - 1) * limitNum;
 
   const [marathons, total] = await Promise.all([
-    Marathon.find(filter).sort(sort).skip(skip).limit(parseInt(limit)).lean(),
+    Marathon.find(filter).sort(sort).skip(skip).limit(limitNum).lean(),
     Marathon.countDocuments(filter),
   ]);
 
@@ -77,9 +81,9 @@ export const getAllMarathons = async (query) => {
   return {
     marathons: marathonsWithCounts,
     total,
-    page: parseInt(page),
-    limit: parseInt(limit),
-    totalPages: Math.ceil(total / parseInt(limit)),
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
   };
 };
 

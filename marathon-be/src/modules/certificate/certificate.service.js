@@ -1,38 +1,116 @@
 import QRCode from "qrcode";
+import puppeteer from "puppeteer";
 import Certificate from "./certificate.model.js";
+import CertificateTemplate from "./certificateTemplate.model.js";
 import Registration from "../registration/registration.model.js";
 import Result from "../result/result.model.js";
 import { AppError } from "../../utils/AppError.js";
-import { sendCertificateEmail as sendCertEmail } from "../../services/email.service.js";
+import { uploadFile } from "../../services/storage/storage.service.js";
+import { notificationService } from "../../services/notification/notification.service.js";
+import { NOTIFICATION_TYPES } from "../../services/notification/notification.types.js";
+import { escapeRegExp } from "../../utils/regex.js";
+
+// --- TEMPLATE MANAGEMENT SERVICES ---
+
+export const createTemplate = async (data) => {
+  if (data.isDefault) {
+    // Turn off other defaults of the same type and same marathon
+    await CertificateTemplate.updateMany(
+      { type: data.type, marathon: data.marathon || null, isDefault: true },
+      { isDefault: false }
+    );
+  }
+  return await CertificateTemplate.create(data);
+};
+
+export const getAllTemplates = async (query = {}) => {
+  const { type, marathon, page = 1, limit = 20 } = query;
+  const filter = {};
+  if (type) filter.type = type;
+  if (marathon !== undefined) filter.marathon = marathon === "null" ? null : marathon;
+
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+  const skip = (pageNum - 1) * limitNum;
+  const [templates, total] = await Promise.all([
+    CertificateTemplate.find(filter)
+      .populate("marathon", "title slug eventDate")
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    CertificateTemplate.countDocuments(filter),
+  ]);
+
+  return {
+    templates,
+    total,
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
+  };
+};
+
+export const getTemplateById = async (id) => {
+  const template = await CertificateTemplate.findById(id).populate("marathon", "title slug eventDate").lean();
+  if (!template) throw new AppError("Template not found", 404);
+  return template;
+};
+
+export const updateTemplate = async (id, data) => {
+  const template = await CertificateTemplate.findById(id);
+  if (!template) throw new AppError("Template not found", 404);
+
+  if (data.isDefault) {
+    await CertificateTemplate.updateMany(
+      { type: data.type || template.type, marathon: data.marathon !== undefined ? data.marathon : template.marathon, isDefault: true },
+      { isDefault: false }
+    );
+  }
+
+  Object.assign(template, data);
+  await template.save();
+  return template;
+};
+
+export const deleteTemplate = async (id) => {
+  const template = await CertificateTemplate.findByIdAndDelete(id);
+  if (!template) throw new AppError("Template not found", 404);
+};
+
+// --- CERTIFICATE CORE SERVICES ---
 
 export const getAllCertificates = async (query = {}) => {
   const {
-    page = 1, limit = 20, search = "", status, event, sort = "-createdAt",
+    page = 1, limit = 20, search = "", status, event, type, sort = "-createdAt",
   } = query;
   const filter = {};
   if (status) filter.status = status;
   if (event) filter.marathon = event;
+  if (type) filter.type = type;
   if (search) {
+    const escapedSearch = escapeRegExp(search);
     filter.$or = [
-      { certificateNumber: { $regex: search, $options: "i" } },
-      { "participant.fullName": { $regex: search, $options: "i" } },
-      { bibNumber: { $regex: search, $options: "i" } },
+      { certificateNumber: { $regex: escapedSearch, $options: "i" } },
+      { "participant.fullName": { $regex: escapedSearch, $options: "i" } },
+      { bibNumber: { $regex: escapedSearch, $options: "i" } },
     ];
   }
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 20));
+  const skip = (pageNum - 1) * limitNum;
   const [certificates, total] = await Promise.all([
     Certificate.find(filter)
       .populate("marathon", "title slug eventDate")
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit))
+      .limit(limitNum)
       .lean(),
     Certificate.countDocuments(filter),
   ]);
   return {
     certificates, total,
-    page: parseInt(page), limit: parseInt(limit),
-    totalPages: Math.ceil(total / parseInt(limit)),
+    page: pageNum, limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
   };
 };
 
@@ -40,6 +118,7 @@ export const getCertificateById = async (id) => {
   const cert = await Certificate.findById(id)
     .populate("marathon", "title slug eventDate venue")
     .populate("registration", "registrationNumber status")
+    .populate("template")
     .lean();
   if (!cert) throw new AppError("Certificate not found", 404);
   return cert;
@@ -69,13 +148,122 @@ async function generateQR(certNumber) {
   }
 }
 
-// Generate certificates for all completed registrations of a marathon (or one registration)
-export const generateCertificates = async ({ marathonId, registrationId }) => {
+// Compile template replacing double brace placeholders
+function compileTemplate(html, data) {
+  let compiled = html;
+  for (const [key, value] of Object.entries(data)) {
+    const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g");
+    compiled = compiled.replace(regex, value !== undefined && value !== null ? value : "");
+  }
+  return compiled;
+}
+
+// Helper to launch Puppeteer and export PDF
+async function generatePDFBuffer(html) {
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      landscape: true,
+      printBackground: true,
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+    return pdfBuffer;
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+}
+
+export const getCertificateHTML = async (id, isPreview = false, previewData = null) => {
+  let cert = null;
+  let templateContent = "";
+
+  if (isPreview) {
+    cert = previewData;
+  } else {
+    cert = await Certificate.findById(id)
+      .populate("marathon", "title slug eventDate venue")
+      .populate("template")
+      .lean();
+    if (!cert) throw new AppError("Certificate not found", 404);
+  }
+
+  // Determine HTML Template
+  if (cert.template?.htmlContent) {
+    templateContent = cert.template.htmlContent;
+  } else if (cert.templateId) {
+    // For preview before saving
+    const tempObj = await CertificateTemplate.findById(cert.templateId).lean();
+    if (tempObj) templateContent = tempObj.htmlContent;
+  }
+
+  if (!templateContent) {
+    // Retrieve Default Template from database
+    const dbDefault = await CertificateTemplate.findOne({
+      type: cert.type || "finisher",
+      marathon: cert.marathon?._id || cert.marathon || null,
+      isDefault: true,
+    }).lean();
+
+    if (dbDefault) {
+      templateContent = dbDefault.htmlContent;
+    } else {
+      // Find global default template
+      const globalDefault = await CertificateTemplate.findOne({
+        type: cert.type || "finisher",
+        marathon: null,
+        isDefault: true,
+      }).lean();
+      if (globalDefault) {
+        templateContent = globalDefault.htmlContent;
+      }
+    }
+  }
+
+  // Fallback to beautiful system default
+  if (!templateContent) {
+    templateContent = getDefaultHTMLTemplate(cert.type || "finisher");
+  }
+
+  const verifyUrl = getVerificationUrl(cert.certificateNumber || "TEMP-CERT");
+  const qrDataUrl = cert.qrCode || await generateQR(cert.certificateNumber || "TEMP-CERT");
+  const eventDate = cert.eventDate
+    ? new Date(cert.eventDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+    : "—";
+  const finishTimeStr = formatTime(cert.finishTime);
+
+  const context = {
+    fullName: cert.participant?.fullName || "Participant",
+    marathonTitle: cert.marathon?.title || "Marathon Event",
+    categoryName: cert.raceCategory?.name || "—",
+    distance: cert.raceCategory?.distance || "—",
+    bibNumber: cert.bibNumber || "—",
+    finishTime: finishTimeStr,
+    eventDate,
+    certificateNumber: cert.certificateNumber || "TEMP-CERT",
+    qrCode: qrDataUrl,
+    verifyUrl,
+    venue: cert.marathon?.venue?.name || "—",
+  };
+
+  return compileTemplate(templateContent, context);
+};
+
+// Generate certificates for a marathon (or single registration)
+export const generateCertificates = async ({ marathonId, registrationId, type = "finisher", templateId }) => {
   let registrations = [];
 
   if (registrationId) {
     const reg = await Registration.findById(registrationId)
-      .populate("marathon", "title eventDate")
+      .populate("marathon", "title eventDate venue")
       .lean();
     if (!reg) throw new AppError("Registration not found", 404);
     registrations = [reg];
@@ -83,62 +271,157 @@ export const generateCertificates = async ({ marathonId, registrationId }) => {
     registrations = await Registration.find({
       marathon: marathonId,
       status: "confirmed",
-      isCompleted: true,
+      // Non-finishers can also get certificates (Participation, Volunteer, Organizer)
+      ...(type === "finisher" || type === "winner" ? { isCompleted: true } : {}),
     })
-      .populate("marathon", "title eventDate")
+      .populate("marathon", "title eventDate venue")
       .lean();
   } else {
     throw new AppError("Provide marathonId or registrationId", 400);
   }
 
+  // Pick suitable template
+  let selectedTemplate = null;
+  if (templateId) {
+    selectedTemplate = await CertificateTemplate.findById(templateId);
+  } else {
+    // Look for marathon-specific template first
+    selectedTemplate = await CertificateTemplate.findOne({
+      marathon: marathonId || registrations[0]?.marathon?._id,
+      type,
+      isActive: true,
+    });
+    if (!selectedTemplate) {
+      // Look for global default template
+      selectedTemplate = await CertificateTemplate.findOne({
+        marathon: null,
+        type,
+        isDefault: true,
+        isActive: true,
+      });
+    }
+  }
+
   const created = [];
   const skipped = [];
+  const errors = [];
 
   for (const reg of registrations) {
-    const existing = await Certificate.findOne({ registration: reg._id });
+    // Duplicate prevention for same registration and type
+    const existing = await Certificate.findOne({ registration: reg._id, type });
     if (existing) {
       skipped.push(reg._id);
       continue;
     }
 
-    const result = await Result.findOne({ registration: reg._id }).lean();
-    const certData = {
-      registration: reg._id,
-      marathon: reg.marathon._id,
-      participant: {
-        fullName: reg.runnerDetails?.fullName,
-        email: reg.runnerDetails?.email,
-      },
-      raceCategory: {
-        name: reg.raceCategory?.name,
-        distance: reg.raceCategory?.distance,
-      },
-      bibNumber: reg.bibNumber,
-      finishTime: result?.chipTime || result?.gunTime,
-      eventDate: reg.marathon?.eventDate,
-      status: "generated",
-      generatedAt: new Date(),
-    };
+    try {
+      const resultObj = await Result.findOne({ registration: reg._id });
+      if (!resultObj || !resultObj.isPublished) {
+        throw new AppError("Cannot generate certificate: Results are not yet published.", 400);
+      }
 
-    const cert = await Certificate.create(certData);
-    const verifyUrl = getVerificationUrl(cert.certificateNumber);
-    cert.qrCode = await generateQR(cert.certificateNumber);
-    await cert.save();
+      const certData = {
+        registration: reg._id,
+        marathon: reg.marathon._id,
+        type,
+        template: selectedTemplate?._id || undefined,
+        result: resultObj._id,
+        participant: {
+          fullName: reg.runnerDetails?.fullName,
+          email: reg.runnerDetails?.email,
+        },
+        raceCategory: {
+          name: reg.raceCategory?.name,
+          distance: reg.raceCategory?.distance,
+        },
+        bibNumber: reg.bibNumber,
+        finishTime: resultObj.chipTime || resultObj.gunTime || undefined,
+        eventDate: reg.marathon?.eventDate,
+        status: "pending",
+      };
 
-    created.push(cert._id);
+      const cert = await Certificate.create(certData);
+      cert.qrCode = await generateQR(cert.certificateNumber);
+
+      // Link result to this certificate
+      resultObj.certificate = cert._id;
+      await resultObj.save();
+
+      // Generate HTML and PDF
+      const html = await getCertificateHTML(cert._id);
+      const pdfBuffer = await generatePDFBuffer(html);
+
+      // Upload PDF to storage
+      const uploadResult = await uploadFile(pdfBuffer, {
+        folder: "certificates",
+        filename: cert.certificateNumber,
+      });
+
+      cert.certificateUrl = uploadResult.secureUrl;
+      cert.status = "generated";
+      cert.generatedAt = new Date();
+      await cert.save();
+
+      // Integrate with the Notification Engine
+      try {
+        await notificationService.send({
+          recipient: {
+            email: cert.participant.email,
+            phone: reg.runnerDetails?.phone,
+          },
+          type: NOTIFICATION_TYPES.CERTIFICATE_READY,
+          data: {
+            participantName: cert.participant.fullName,
+            marathonName: reg.marathon.title,
+            certificateUrl: cert.certificateUrl,
+            verifyUrl: getVerificationUrl(cert.certificateNumber),
+          },
+        });
+      } catch (notifErr) {
+        console.error(`Failed to send notification for certificate ${cert.certificateNumber}:`, notifErr.message);
+      }
+
+      created.push(cert._id);
+    } catch (err) {
+      console.error(`Error generating certificate for registration ${reg._id}:`, err.message);
+      errors.push({ registrationId: reg._id, error: err.message });
+    }
   }
 
-  return { generated: created.length, skipped: skipped.length };
+  return { generated: created.length, skipped: skipped.length, errors };
 };
 
 export const regenerateCertificate = async (id) => {
-  const cert = await Certificate.findById(id);
+  const cert = await Certificate.findById(id)
+    .populate("marathon", "title eventDate venue")
+    .populate("registration", "runnerDetails")
+    .populate("template");
   if (!cert) throw new AppError("Certificate not found", 404);
+
+  // Recalculate QR Code
+  cert.qrCode = await generateQR(cert.certificateNumber);
+
+  // Fetch results in case they changed
+  const result = await Result.findOne({ registration: cert.registration }).lean();
+  if (result) {
+    cert.finishTime = result.chipTime || result.gunTime;
+  }
+
+  // Generate HTML and PDF
+  const html = await getCertificateHTML(cert._id);
+  const pdfBuffer = await generatePDFBuffer(html);
+
+  // Re-upload to storage
+  const uploadResult = await uploadFile(pdfBuffer, {
+    folder: "certificates",
+    filename: cert.certificateNumber,
+  });
+
+  cert.certificateUrl = uploadResult.secureUrl;
   cert.status = "generated";
   cert.generatedAt = new Date();
-  cert.certificateUrl = undefined;
-  cert.qrCode = await generateQR(cert.certificateNumber);
   await cert.save();
+
   return cert;
 };
 
@@ -147,25 +430,78 @@ export const deleteCertificate = async (id) => {
   if (!cert) throw new AppError("Certificate not found", 404);
 };
 
-export const getCertificateHTML = async (id) => {
+export const sendCertificateEmail = async (id) => {
   const cert = await Certificate.findById(id)
-    .populate("marathon", "title slug eventDate venue")
+    .populate("marathon", "title eventDate")
     .lean();
   if (!cert) throw new AppError("Certificate not found", 404);
+  if (!cert.participant?.email) throw new AppError("No email address for this participant", 400);
 
   const verifyUrl = getVerificationUrl(cert.certificateNumber);
-  const qrDataUrl = cert.qrCode || await generateQR(cert.certificateNumber);
-  const eventDate = cert.eventDate
-    ? new Date(cert.eventDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
-    : "—";
-  const finishTime = formatTime(cert.finishTime);
+  const html = await getCertificateHTML(id);
+
+  // Send through notification service
+  await notificationService.send({
+    recipient: { email: cert.participant.email },
+    type: NOTIFICATION_TYPES.CERTIFICATE_READY,
+    data: {
+      participantName: cert.participant.fullName,
+      marathonName: cert.marathon?.title || "Marathon Event",
+      certificateUrl: cert.certificateUrl,
+      verifyUrl,
+    },
+  });
+
+  await Certificate.findByIdAndUpdate(id, { status: "emailed", emailedAt: new Date() });
+
+  return { emailed: true, email: cert.participant.email };
+};
+
+export const verifyCertificate = async (certNumber) => {
+  const cert = await Certificate.findOne({ certificateNumber: certNumber })
+    .populate("marathon", "title eventDate venue")
+    .populate("template")
+    .lean();
+  if (!cert) throw new AppError("Certificate not found or invalid", 404);
+  return cert;
+};
+
+// --- DEFAULT SYSTEM HTML TEMPLATES FOR FALLBACK ---
+
+function getDefaultHTMLTemplate(type) {
+  let title = "Certificate of Completion";
+  let subtitle = "for successfully completing the";
+  let badge = "&#9733;";
+
+  switch (type) {
+    case "participation":
+      title = "Certificate of Participation";
+      subtitle = "for participating in the";
+      badge = "&#9825;";
+      break;
+    case "winner":
+      title = "Certificate of Victory";
+      subtitle = "for securing a podium finish in the";
+      badge = "&#127942;";
+      break;
+    case "volunteer":
+      title = "Certificate of Appreciation";
+      subtitle = "for volunteering and supporting the";
+      badge = "&#10084;";
+      break;
+    case "organizer":
+      title = "Certificate of Recognition";
+      subtitle = "for organizing and coordinating the";
+      badge = "&#128736;";
+      break;
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Certificate of Completion - ${cert.certificateNumber}</title>
+  <title>${title} - {{certificateNumber}}</title>
   <style>
     @page { margin: 0; size: landscape; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -246,81 +582,83 @@ export const getCertificateHTML = async (id) => {
 <body>
   <div class="certificate">
     <div class="header">
-      <div class="badge">&#9733;</div>
-      <h1>Certificate of Completion</h1>
+      <div class="badge">${badge}</div>
+      <h1>${title}</h1>
       <p>Proudly Presented To</p>
     </div>
     <div class="divider"></div>
     <div class="body-text">
-      <p class="name">${cert.participant?.fullName || "Participant"}</p>
-      <p class="detail">for successfully completing the</p>
-      <p class="event-name">${cert.marathon?.title || "Marathon Event"}</p>
+      <p class="name">{{fullName}}</p>
+      <p class="detail">${subtitle}</p>
+      <p class="event-name">{{marathonTitle}}</p>
       <div class="info-grid">
         <div class="info-item">
           <div class="info-label">Category</div>
-          <div class="info-value">${cert.raceCategory?.name || "—"} (${cert.raceCategory?.distance || "—"})</div>
+          <div class="info-value">{{categoryName}} ({{distance}})</div>
         </div>
         <div class="info-item">
           <div class="info-label">Bib Number</div>
-          <div class="info-value">${cert.bibNumber || "—"}</div>
+          <div class="info-value">{{bibNumber}}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Finish Time</div>
-          <div class="info-value">${finishTime}</div>
+          <div class="info-value">{{finishTime}}</div>
         </div>
         <div class="info-item">
           <div class="info-label">Date</div>
-          <div class="info-value">${eventDate}</div>
+          <div class="info-value">{{eventDate}}</div>
         </div>
       </div>
     </div>
     <div class="footer">
       <div class="qr">
-        <img src="${qrDataUrl}" alt="QR Code" />
+        <img src="{{qrCode}}" alt="QR Code" />
         <span>Scan to verify</span>
       </div>
       <div class="verify">
-        <strong>${cert.certificateNumber || ""}</strong><br />
-        <a href="${verifyUrl}" target="_blank">Verify Online</a>
+        <strong>{{certificateNumber}}</strong><br />
+        <a href="{{verifyUrl}}" target="_blank">Verify Online</a>
       </div>
     </div>
   </div>
-  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
 </body>
 </html>`;
-};
+}
 
-export const sendCertificateEmail = async (id) => {
-  const cert = await Certificate.findById(id)
-    .populate("marathon", "title eventDate")
-    .lean();
-  if (!cert) throw new AppError("Certificate not found", 404);
-  if (!cert.participant?.email) throw new AppError("No email address for this participant", 400);
+export const getCertificateStatus = async (registrationId) => {
+  const reg = await Registration.findById(registrationId).lean();
+  if (!reg) throw new AppError("Registration not found", 404);
 
-  const verifyUrl = getVerificationUrl(cert.certificateNumber);
-  const html = await getCertificateHTML(id);
+  const certificates = await Certificate.find({ registration: registrationId }).populate("template").lean();
+  const result = await Result.findOne({ registration: registrationId }).lean();
 
-  await sendCertEmail({
-    to: cert.participant.email,
-    subject: `Your Certificate - ${cert.marathon?.title || "Marathon Event"}`,
-    html: `<p>Dear ${cert.participant.fullName},</p>
-<p>Congratulations on completing ${cert.marathon?.title || "the event"}!</p>
-<p>Your certificate is attached below. You can also verify it online:</p>
-<p><a href="${verifyUrl}">${verifyUrl}</a></p>
-<p>Thank you for participating!</p>`,
-  });
+  let eligibility = "not_eligible";
+  let reason = "No race result found.";
 
-  cert.status = "emailed";
-  cert.emailedAt = new Date();
-  await Certificate.findByIdAndUpdate(id, { status: "emailed", emailedAt: new Date() });
+  if (result) {
+    if (result.isPublished) {
+      eligibility = "eligible";
+      reason = "Results are officially published. Certificate can be generated.";
+    } else {
+      eligibility = "pending_results_publish";
+      reason = "Result exists, but official results are not yet published.";
+    }
+  } else {
+    reason = "No official timing or result found for this registration.";
+  }
 
-  return { emailed: true, email: cert.participant.email };
-};
-
-export const verifyCertificate = async (certNumber) => {
-  const cert = await Certificate.findOne({ certificateNumber: certNumber })
-    .populate("marathon", "title eventDate venue")
-    .lean();
-  if (!cert) throw new AppError("Certificate not found or invalid", 404);
-  return cert;
+  return {
+    registrationId,
+    hasCertificates: certificates.length > 0,
+    certificates: certificates.map((c) => ({
+      id: c._id,
+      type: c.type,
+      status: c.status,
+      certificateUrl: c.certificateUrl,
+      generatedAt: c.generatedAt,
+    })),
+    eligibility,
+    reason,
+    resultRecorded: !!result,
+  };
 };

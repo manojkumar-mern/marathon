@@ -42,14 +42,13 @@ export const certificateService = {
   },
 
   async preview(id) {
-    window.open(`/api/certificates/${id}/preview`, '_blank')
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+    window.open(`${base}/certificates/${id}/preview`, '_blank')
   },
 
   async download(id) {
-    const a = document.createElement('a')
-    a.href = `/api/certificates/${id}/preview?download=true`
-    a.download = `certificate-${id}.html`
-    a.click()
+    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+    window.open(`${base}/certificates/${id}/download`, '_blank')
   },
 
   async sendEmail(id) {

@@ -88,12 +88,22 @@ export const NOTIFICATION_CONFIGS = {
     },
   },
   [NOTIFICATION_TYPES.CERTIFICATE_READY]: {
-    defaultChannels: [CHANNELS.EMAIL],
+    defaultChannels: [CHANNELS.EMAIL, CHANNELS.WHATSAPP],
     formatters: {
       [CHANNELS.EMAIL]: (data) => ({
-        subject: `STRIDEFORGE - Finisher Certificate Ready: ${data.marathonName}`,
+        subject: `STRIDEFORGE - Certificate Ready: ${data.marathonName}`,
         templateName: "certificate_ready",
         context: data,
+      }),
+      [CHANNELS.WHATSAPP]: (data) => ({
+        templateName: "certificate_ready",
+        components: [
+          { type: "body", parameters: [
+            { type: "text", text: data.participantName },
+            { type: "text", text: data.marathonName },
+            { type: "text", text: data.certificateUrl || data.verifyUrl }
+          ]}
+        ],
       }),
     },
   },

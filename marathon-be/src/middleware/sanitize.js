@@ -15,12 +15,11 @@ export const mongoSanitize = (req, res, next) => {
   if (req.body) req.body = stripNested(req.body);
   if (req.params) req.params = stripNested(req.params);
   if (req.query) {
-    const clean = stripNested({ ...req.query });
-    Object.keys(clean).forEach((k) => {
-      if (req.query[k] !== clean[k]) {
-        req.query[k] = clean[k];
-      }
-    });
+    const clean = stripNested(req.query);
+    for (const key in req.query) {
+      delete req.query[key];
+    }
+    Object.assign(req.query, clean);
   }
   next();
 };

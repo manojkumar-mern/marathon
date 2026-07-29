@@ -79,3 +79,16 @@ export const list = asyncHandler(async (req, res) => {
     data: result,
   });
 });
+
+export const handleWebhook = asyncHandler(async (req, res) => {
+  const rawBody = req.rawBody || JSON.stringify(req.body);
+  const signature = req.headers["x-razorpay-signature"];
+  const event = req.body?.event;
+
+  const result = await paymentService.handleWebhook(rawBody, signature, event);
+
+  return successResponse(res, {
+    message: "Webhook processed successfully",
+    data: result,
+  });
+});

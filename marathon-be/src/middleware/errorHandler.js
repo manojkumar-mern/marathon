@@ -75,10 +75,9 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   if (statusCode === 500) {
+    console.error("❌ Unhandled error:", err);
     if (env.isProduction) {
       message = "Internal server error";
-    } else {
-      console.error("❌ Unhandled error:", err);
     }
   }
 

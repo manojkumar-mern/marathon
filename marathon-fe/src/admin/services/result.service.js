@@ -28,4 +28,14 @@ export const resultService = {
   async remove(id) {
     await api.delete(`/results/${id}`)
   },
+
+  async publish(marathonId) {
+    const res = await api.post(`/results/publish/${marathonId}`)
+    return res.data
+  },
+
+  async unpublish(marathonId) {
+    const res = await api.post(`/results/unpublish/${marathonId}`)
+    return res.data
+  },
 }

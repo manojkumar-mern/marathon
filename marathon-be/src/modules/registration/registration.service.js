@@ -1,18 +1,16 @@
 import Registration from "./registration.model.js";
 import Marathon from "../marathon/marathon.model.js";
+import mongoose from "mongoose";
 import { AppError } from "../../utils/AppError.js";
+import { escapeRegExp } from "../../utils/regex.js";
 import { n8n as n8nService } from "../../automation/n8n.service.js";
 
 export const createRegistration = async (userId, data) => {
   let marathon = null;
-  try {
+  if (mongoose.Types.ObjectId.isValid(data.marathon)) {
     marathon = await Marathon.findById(data.marathon);
-  } catch {
-    // data.marathon may be a slug or non-ObjectId string — try slug lookup
-    marathon = await Marathon.findOne({ slug: data.marathon });
   }
   if (!marathon) {
-    // Last resort: search by slug
     marathon = await Marathon.findOne({ slug: data.marathon });
   }
   if (!marathon) {
@@ -91,23 +89,25 @@ export const createRegistration = async (userId, data) => {
 export const getMyRegistrations = async (userId, query) => {
   const { page = 1, limit = 50, sort = "-createdAt" } = query;
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+  const skip = (pageNum - 1) * limitNum;
 
   const [registrations, total] = await Promise.all([
     Registration.find({ user: userId })
       .populate("marathon", "title slug eventDate venue.city venue.name status")
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit)),
+      .limit(limitNum),
     Registration.countDocuments({ user: userId }),
   ]);
 
   return {
     registrations,
     total,
-    page: parseInt(page),
-    limit: parseInt(limit),
-    totalPages: Math.ceil(total / parseInt(limit)),
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
   };
 };
 
@@ -138,15 +138,18 @@ export const getAllRegistrations = async (query) => {
   if (status) filter.status = status;
 
   if (search) {
+    const escapedSearch = escapeRegExp(search);
     filter.$or = [
-      { registrationNumber: { $regex: search, $options: "i" } },
-      { "runnerDetails.fullName": { $regex: search, $options: "i" } },
-      { "runnerDetails.email": { $regex: search, $options: "i" } },
-      { "runnerDetails.phone": { $regex: search, $options: "i" } },
+      { registrationNumber: { $regex: escapedSearch, $options: "i" } },
+      { "runnerDetails.fullName": { $regex: escapedSearch, $options: "i" } },
+      { "runnerDetails.email": { $regex: escapedSearch, $options: "i" } },
+      { "runnerDetails.phone": { $regex: escapedSearch, $options: "i" } },
     ];
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+  const skip = (pageNum - 1) * limitNum;
 
   const [registrations, total, statusCounts] = await Promise.all([
     Registration.find(filter)
@@ -154,7 +157,7 @@ export const getAllRegistrations = async (query) => {
       .populate("user", "fullName email phone")
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit)),
+      .limit(limitNum),
     Registration.countDocuments(filter),
     Registration.aggregate([
       { $match: filter },
@@ -170,9 +173,9 @@ export const getAllRegistrations = async (query) => {
   return {
     registrations,
     total,
-    page: parseInt(page),
-    limit: parseInt(limit),
-    totalPages: Math.ceil(total / parseInt(limit)),
+    page: pageNum,
+    limit: limitNum,
+    totalPages: Math.ceil(total / limitNum),
     counts,
   };
 };
