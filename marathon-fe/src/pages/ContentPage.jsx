@@ -6,6 +6,7 @@ import bengaluruImg from '../assets/images/locations/bengaluru.webp'
 import { Link } from 'react-router-dom'
 import { BRAND } from '../config/brand'
 import SEO from '../components/common/SEO'
+import { aboutRunner } from '../assets/images/index.js'
 import { faqItems, galleryImages, pageContent, raceCategories, runningClubs, upcomingMeetups, venueDetails, volunteerProgram, ambassadorProgram } from '../data/platform'
 
 const genericPages = {
@@ -48,6 +49,7 @@ function ContentPage({ type }) {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' })
   const [formErrors, setFormErrors] = useState({})
   const [formSubmitted, setFormSubmitted] = useState(false)
+  const [showAllFaq, setShowAllFaq] = useState(false)
 
   const seo = {
     categories: { title: 'Race Categories', description: `Explore ${BRAND.name} race categories — Kids Run, 5K, 10K, Half Marathon, Full Marathon, and Corporate Challenge. Find your distance.`, url: '/race-categories' },
@@ -112,12 +114,12 @@ function ContentPage({ type }) {
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted">{comm.description}</p>
 
           {/* Photo Gallery */}
-          <div className="mt-14 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-14 grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {galleryImages.map((img) => (
               <div
                 key={img.alt}
                 className={`group relative overflow-hidden rounded-2xl border border-steel/40 ${
-                  img.large ? 'sm:col-span-2 sm:row-span-2' : ''
+                  img.large ? 'lg:col-span-2 lg:row-span-2' : ''
                 }`}
                 style={{ aspectRatio: img.large ? '1/1' : '4/3' }}
               >
@@ -280,7 +282,7 @@ function ContentPage({ type }) {
       <main className="bg-obsidian py-20 sm:py-28">
         <SEO title={s.title} description={s.description} url={s.url} />
         <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:px-10">
-          <div>
+          <div className="lg:sticky lg:top-[96px] self-start">
             <Eyebrow>FAQ</Eyebrow>
             <h1 className="mt-4 font-display text-5xl font-black italic leading-none tracking-tight text-sf-white">
               ANSWERS FOR RACE DAY.
@@ -293,21 +295,33 @@ function ContentPage({ type }) {
             </Link>
           </div>
 
-          <div className="divide-y divide-steel border-y border-steel">
-            {faqItems.map(([q, a]) => (
-              <details key={q} className="group py-6">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white">
-                  {q}
-                  <span
-                    aria-hidden="true"
-                    className="shrink-0 text-xl font-normal text-ember transition-transform group-open:rotate-45"
-                  >
-                    +
-                  </span>
-                </summary>
-                <p className="mt-4 text-sm leading-7 text-muted">{a}</p>
-              </details>
-            ))}
+          <div>
+            <div className="divide-y divide-steel border-y border-steel">
+              {(showAllFaq ? faqItems : faqItems.slice(0, 6)).map(([q, a]) => (
+                <details key={q} className="group py-6">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white">
+                    {q}
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 text-xl font-normal text-ember transition-transform group-open:rotate-45"
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-sm leading-7 text-muted">{a}</p>
+                </details>
+              ))}
+            </div>
+            {faqItems.length > 6 && (
+              <div className="mt-8">
+                <button
+                  onClick={() => setShowAllFaq(!showAllFaq)}
+                  className="inline-flex items-center gap-2 rounded-full border border-ember bg-transparent px-6 py-2.5 text-sm font-semibold text-ember transition-all hover:bg-ember hover:text-white active:scale-95 cursor-pointer"
+                >
+                  {showAllFaq ? 'Show Less' : 'Show More Questions'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -321,17 +335,36 @@ function ContentPage({ type }) {
       <main className="bg-obsidian py-20 sm:py-28">
         <SEO title={s.title} description={s.description} url={s.url} />
         <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
-          <Eyebrow>{about.eyebrow}</Eyebrow>
-          <h1 className="mt-4 font-display text-5xl font-black italic leading-none tracking-tight text-sf-white sm:text-6xl">
-            {about.title.toUpperCase()}
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-7 text-muted">{about.description}</p>
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 items-start">
+            {/* Left Column: text content */}
+            <div className="lg:col-span-7">
+              <Eyebrow>{about.eyebrow}</Eyebrow>
+              <h1 className="mt-4 font-display text-5xl font-black italic leading-none tracking-tight text-sf-white sm:text-6xl uppercase">
+                {about.title.toUpperCase()}
+              </h1>
+              <p className="mt-5 text-base leading-7 text-muted">{about.description}</p>
 
-          {/* Story */}
-          <div className="mt-14 max-w-3xl space-y-5">
-            {about.story.map((p, i) => (
-              <p key={i} className="text-sm leading-7 text-muted">{p}</p>
-            ))}
+              {/* Story */}
+              <div className="mt-10 space-y-5">
+                {about.story.map((p, i) => (
+                  <p key={i} className="text-sm leading-7 text-muted">{p}</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column: Shoe tying image */}
+            <div className="lg:col-span-5 lg:sticky lg:top-[96px] z-0">
+              <div className="relative overflow-hidden rounded-3xl border border-steel/60 aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
+                <img
+                  alt="Runner tying shoe laces"
+                  src={aboutRunner}
+                  loading="lazy"
+                  decoding="async"
+                  className="size-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-obsidian/40 to-transparent" />
+              </div>
+            </div>
           </div>
 
           {/* Mission & Vision */}

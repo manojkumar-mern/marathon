@@ -9,6 +9,7 @@ import {
   PAYMENT_STATUS,
   REGISTRATION_PAYMENT_STATUS,
 } from "../../services/payment/payment.constants.js";
+import { syncParticipant } from "../../services/zoho.service.js";
 
 const generateReceipt = () => {
   const ts = Date.now().toString(36).toUpperCase();
@@ -182,6 +183,12 @@ export const verifyPayment = async (userId, data) => {
     console.error("[n8n-automation-error] Failed to trigger registration success webhook from verifyPayment:", error);
   }
 
+  try {
+    await syncParticipant(registration._id);
+  } catch (zohoError) {
+    console.error("[Zoho CRM Trigger Error] Failed to invoke syncParticipant from verifyPayment:", zohoError);
+  }
+
 
   return {
     paymentId: payment._id,
@@ -253,6 +260,12 @@ export const handleWebhook = async (rawBody, signature, event) => {
           });
         } catch (error) {
           console.error("[n8n-automation-error] Failed to trigger registration success webhook from handleWebhook:", error);
+        }
+
+        try {
+          await syncParticipant(registration._id);
+        } catch (zohoError) {
+          console.error("[Zoho CRM Trigger Error] Failed to invoke syncParticipant from handleWebhook:", zohoError);
         }
       }
     }

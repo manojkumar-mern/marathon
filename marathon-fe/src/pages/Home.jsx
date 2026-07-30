@@ -13,55 +13,13 @@ import Hero from '../components/sections/Hero/Hero'
 import About from '../components/sections/About/About'
 import SEO from '../components/common/SEO'
 
-/* ─── Countdown helper for featured marathon ─── */
-function getCountdown(targetDateStr) {
-  const diff = new Date(targetDateStr) - Date.now()
-  if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 }
-  const s = Math.floor(diff / 1000)
-  return {
-    days:    Math.floor(s / 86400),
-    hours:   Math.floor((s % 86400) / 3600),
-    minutes: Math.floor((s % 3600) / 60),
-    seconds: s % 60,
-  }
-}
-
-function FeaturedCountdown({ targetDate }) {
-  const [time, setTime] = useState(() => getCountdown(targetDate))
-
-  useEffect(() => {
-    const id = setInterval(() => setTime(getCountdown(targetDate)), 1000)
-    return () => clearInterval(id)
-  }, [targetDate])
-
-  return (
-    <div className="grid grid-cols-4 gap-2 text-center max-w-sm">
-      <div className="bg-carbon/90 border border-white/10 rounded-2xl p-3 shadow-lg">
-        <span className="block font-display text-2xl font-black italic text-volt">{String(time.days).padStart(2, '0')}</span>
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted">Days</span>
-      </div>
-      <div className="bg-carbon/90 border border-white/10 rounded-2xl p-3 shadow-lg">
-        <span className="block font-display text-2xl font-black italic text-volt">{String(time.hours).padStart(2, '0')}</span>
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted">Hrs</span>
-      </div>
-      <div className="bg-carbon/90 border border-white/10 rounded-2xl p-3 shadow-lg">
-        <span className="block font-display text-2xl font-black italic text-volt">{String(time.minutes).padStart(2, '0')}</span>
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted">Mins</span>
-      </div>
-      <div className="bg-carbon/90 border border-white/10 rounded-2xl p-3 shadow-lg">
-        <span className="block font-display text-2xl font-black italic text-volt">{String(time.seconds).padStart(2, '0')}</span>
-        <span className="text-[10px] uppercase font-bold tracking-wider text-muted">Secs</span>
-      </div>
-    </div>
-  )
-}
-
 /* ─── FeaturedRegistration ─────────────────────────────────────── */
 function FeaturedRegistration() {
-  const event = events[0]
-  if (!event) return null
-
-  const badges = event.distance ? event.distance.split('·').map(s => s.trim()) : []
+  const statusColors = {
+    'Registration Open': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    'Coming Soon': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    'Registration Opening Soon': 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+  }
 
   return (
     <section className="bg-obsidian py-24 sm:py-32 border-t border-white/5" aria-label="Featured Marathon Registration">
@@ -70,83 +28,87 @@ function FeaturedRegistration() {
           <div className="text-center mb-16">
             <p className="flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-ember">
               <span aria-hidden="true" className="size-1.5 rounded-full bg-ember" />
-              Featured Event
+              Featured Editions
             </p>
             <h2 className="mt-4 font-display text-4xl font-black italic leading-none tracking-tight text-sf-white sm:text-5xl uppercase">
-              NEXT START LINE.
+              THIS SEASON'S LINEUP.
             </h2>
           </div>
         </ScrollReveal>
 
-        <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
-          <ScrollReveal>
-            <div className="relative group overflow-hidden rounded-3xl border border-steel/60 bg-carbon aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3]">
-              <img
-                alt={event.title}
-                src={event.image}
-                loading="lazy"
-                decoding="async"
-                className="size-full object-cover transition-all duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-obsidian via-transparent to-transparent opacity-85" />
-              <span className="absolute left-6 bottom-6 rounded-full bg-obsidian/85 px-4 py-2 text-sm font-bold text-volt backdrop-blur-md border border-white/10">
-                {event.price}
-              </span>
-            </div>
-          </ScrollReveal>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {events.slice(0, 3).map((event) => {
+            const slotsLeft = event.slotsRemaining
+            const totalSlots = event.totalSlots
+            const fillPercent = totalSlots ? Math.round((1 - slotsLeft / totalSlots) * 100) : 0
 
-          <ScrollReveal className="flex flex-col justify-center">
-            <div className="inline-flex w-fit rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400 mb-6">
-              {event.status}
-            </div>
-
-            <h3 className="font-display text-4xl sm:text-5xl font-black italic leading-tight text-sf-white uppercase">
-              {event.title}
-            </h3>
-
-            <div className="mt-6 space-y-3 text-sm text-muted">
-              <p className="flex items-center gap-3">
-                <FaCalendarDays className="text-ember text-sm shrink-0" aria-hidden="true" />
-                <span className="text-sf-white/95 font-medium">{event.date}</span> at {event.startTime}
-              </p>
-              <p className="flex items-center gap-3">
-                <FaLocationDot className="text-ember text-sm shrink-0" aria-hidden="true" />
-                <span className="text-sf-white/95 font-medium">{event.location}</span>
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-2">
-              {badges.map((badge) => (
-                <span
-                  key={badge}
-                  className="rounded-full border border-steel bg-carbon/50 px-3 py-1.5 text-xs font-semibold text-sf-white/85"
-                >
-                  {badge}
-                </span>
-              ))}
-            </div>
-
-            <p className="mt-6 text-sm sm:text-base leading-7 text-muted">
-              {event.description}
-            </p>
-
-            <div className="mt-8">
-              <p className="text-xs font-bold uppercase tracking-widest text-muted-dim mb-3">Registration Closes In</p>
-              <FeaturedCountdown targetDate={event.regDeadline} />
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Button to={`/register?event=${event.id}`} className="h-12 px-8 uppercase tracking-wider text-xs font-bold">
-                Register Now
-              </Button>
-              <Link
-                to={`/events/${event.id}`}
-                className="inline-flex h-12 items-center justify-center rounded-full border border-steel px-6 text-xs font-bold uppercase tracking-wider text-muted hover:border-ember hover:text-ember transition-colors"
+            return (
+              <article
+                key={event.id}
+                className="group flex flex-col overflow-hidden rounded-3xl border border-steel bg-carbon transition-all duration-300 hover:-translate-y-1 hover:border-ember/40"
               >
-                Event Details
-              </Link>
-            </div>
-          </ScrollReveal>
+                {/* Image */}
+                <div className="relative overflow-hidden aspect-[16/10]">
+                  <img
+                    alt={`${event.title} — race event`}
+                    className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                    src={event.image}
+                  />
+                  <span className={`absolute right-4 top-4 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusColors[event.status] || 'bg-amber-500/15 text-amber-400 border-amber-500/30'}`}>
+                    {event.status}
+                  </span>
+                </div>
+
+                {/* Card body */}
+                <div className="flex flex-1 flex-col p-7">
+                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted">
+                    <span className="flex items-center gap-1.5">
+                      <FaCalendarDays className="text-ember text-[10px]" aria-hidden="true" /> {event.date}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <FaLocationDot className="text-ember text-[10px]" aria-hidden="true" /> {event.location}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-4 font-display text-2xl font-black italic leading-tight text-sf-white uppercase">
+                    {event.title}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted">{event.distance}</p>
+
+                  {/* Slots/Progress bar (if available) */}
+                  {totalSlots && (
+                    <div className="mt-5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-sf-white/70">{slotsLeft} spots left</span>
+                        <span className="text-muted-dim">{fillPercent}% filled</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-steel/50">
+                        <div
+                          className="h-full rounded-full bg-ember transition-all duration-700"
+                          style={{ width: `${fillPercent}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="mt-auto pt-6 flex items-center gap-3">
+                    <Button to={`/register?event=${event.id}`} className="flex-1 justify-center text-xs">
+                      Register Now
+                    </Button>
+                    <Link
+                      to={`/events/${event.id}`}
+                      className="rounded-full border border-steel px-4 py-2.5 text-xs font-semibold text-muted transition-colors hover:border-ember hover:text-ember"
+                    >
+                      Details
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </div>
     </section>

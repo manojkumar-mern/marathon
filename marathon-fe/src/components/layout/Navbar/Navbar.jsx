@@ -11,12 +11,12 @@ const menuItems = [
     to: '/',
   },
   {
+    label: 'About',
+    to: '/about',
+  },
+  {
     label: 'Events',
-    submenu: [
-      { label: 'Upcoming Events', to: '/events/upcoming' },
-      { label: 'Past Events', to: '/events/past' },
-      { label: 'Event Calendar', to: '/schedule' },
-    ],
+    to: '/events',
   },
   {
     label: 'Gallery',
@@ -37,14 +37,6 @@ const menuItems = [
     submenu: [
       { label: 'Download Certificate', to: '/login' },
       { label: 'Verify Certificate', to: '/login' },
-    ],
-  },
-  {
-    label: 'About',
-    submenu: [
-      { label: 'About STRIDEFORGE', to: '/about' },
-      { label: 'Our Mission', to: '/about' },
-      { label: 'Organizers', to: '/about' },
     ],
   },
   {
@@ -133,7 +125,7 @@ function Navbar() {
                         </svg>
                       </button>
                       {/* Dropdown Menu */}
-                      <div className="absolute left-1/2 top-full z-50 mt-1 w-52 -translate-x-1/2 scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
+                      <div className="absolute left-1/2 top-full z-50 pt-2 w-52 -translate-x-1/2 scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
                         <div className="rounded-2xl border border-white/10 bg-obsidian/95 p-2 shadow-2xl backdrop-blur-xl">
                           {item.submenu.map((sub) => (
                             <Link
@@ -173,12 +165,6 @@ function Navbar() {
 
           {/* Desktop CTA & Login */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link
-              to="/login"
-              className="text-sm font-medium text-muted hover:text-sf-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
-            >
-              Login
-            </Link>
             <Button to="/register">Register Now</Button>
           </div>
 
@@ -264,13 +250,6 @@ function Navbar() {
         </nav>
 
         <div className="flex flex-col gap-3 p-6 mt-auto border-t border-steel">
-          <Link
-            to="/login"
-            className="flex h-12 items-center justify-center rounded-full border border-steel text-sm font-semibold text-sf-white hover:bg-steel transition-colors"
-            onClick={() => setIsOpen(false)}
-          >
-            Login
-          </Link>
           <Button
             to="/register"
             onClick={() => setIsOpen(false)}
