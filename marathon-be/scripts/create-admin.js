@@ -33,12 +33,29 @@ export async function ensureAdminUser() {
   const collection = mongoose.connection.db.collection("users");
 
   const existing = await collection.findOne({ email: ADMIN_EMAIL });
+  
   if (existing) {
-    console.log("Admin already exists");
+    // Check if the existing password hash matches the intended password
+    const isCorrectPassword = await bcrypt.compare(ADMIN_PASSWORD, existing.password);
+    
+    if (isCorrectPassword) {
+      console.log("Admin password already up to date");
+      return;
+    }
+
+    // Hash the new intended password with cost factor 12
+    const hashedNewPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
+    
+    await collection.updateOne(
+      { _id: existing._id },
+      { $set: { password: hashedNewPassword, updatedAt: new Date() } }
+    );
+    
+    console.log("Admin password updated successfully");
     return;
   }
 
-  // Hash with the same cost factor used in the User model (12)
+  // Hash the password with cost factor 12
   const hashedPassword = await bcrypt.hash(ADMIN_PASSWORD, 12);
 
   await collection.insertOne({
