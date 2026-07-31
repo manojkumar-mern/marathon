@@ -28,7 +28,7 @@ const start = async () => {
   // ── REMOVE AFTER FIRST SUCCESSFUL DEPLOY ────────────────────────────────
   // Creates the admin user once in production if it doesn't already exist.
   // Safe to run on every startup — does nothing if the user already exists.
-  if (env.isProduction) {
+  if (env.isProduction || process.env.RENDER === "true") {
     try {
       await ensureAdminUser();
     } catch (err) {
