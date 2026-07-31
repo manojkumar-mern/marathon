@@ -3,34 +3,10 @@ import { zohoConfig } from "../config/zoho.config.js";
 import { getAccessToken as getAccessTokenFromManager } from "../utils/zohoTokenManager.js";
 import Registration from "../modules/registration/registration.model.js";
 import ZohoSyncLog from "../models/ZohoSyncLog.js";
-
-// Centralized field mapping: local properties mapped to Zoho CRM custom module field API names.
-export const FIELD_MAPPING = {
-  fullName: "Full_Name",
-  email: "Email",
-  mobile: "Mobile",
-  gender: "Gender",
-  dob: "DOB",
-  eventName: "Event_Name",
-  raceCategory: "Race_Category",
-  registrationId: "Registration_ID",
-  paymentStatus: "Payment_Status",
-  registrationDate: "Registration_Date",
-  bibNumber: "Bib_Number",
-  certificateStatus: "Certificate_Status",
-  resultStatus: "Result_Status"
-};
-
-const formatDate = (date) => {
-  if (!date) return null;
-  const d = new Date(date);
-  if (isNaN(d.getTime())) return null;
-  return d.toISOString().split("T")[0];
-};
+import { mapRegistrationToZohoContact } from "./zohoMapper.js";
 
 /**
  * Retrieves a valid Zoho CRM access token, automatically refreshing it if expired.
- * Centralized wrapper to meet requirements.
  * @returns {Promise<string>} The access token.
  */
 export const getAccessToken = async () => {
@@ -38,269 +14,345 @@ export const getAccessToken = async () => {
 };
 
 /**
- * Maps a Registration document to the Zoho CRM record format.
- * Structured to easily support future fields (Bib Number, Results, etc.).
- * @param {Object} registration - The MongoDB registration document
- * @returns {Object} Zoho CRM mapped record
+ * Executes a function with retries and exponential backoff.
+ * Maximum 3 attempts total.
+ * 
+ * @param {Function} fn - Async function to execute
+ * @param {string} operationName - Name of operation for logging
+ * @param {Object} tracker - Tracker object to record retry count
+ * @returns {Promise<any>}
  */
-export const mapRegistrationToZohoRecord = (registration) => {
-  return {
-    [FIELD_MAPPING.fullName]: registration.runnerDetails?.fullName || "",
-    [FIELD_MAPPING.email]: registration.runnerDetails?.email || "",
-    [FIELD_MAPPING.mobile]: registration.runnerDetails?.phone || "",
-    [FIELD_MAPPING.gender]: registration.runnerDetails?.gender || "",
-    [FIELD_MAPPING.dob]: formatDate(registration.runnerDetails?.dateOfBirth),
-    [FIELD_MAPPING.eventName]: registration.marathon?.title || "Unknown Marathon",
-    [FIELD_MAPPING.raceCategory]: registration.raceCategory?.name || "",
-    [FIELD_MAPPING.registrationId]: registration.registrationNumber || registration._id.toString(),
-    [FIELD_MAPPING.paymentStatus]: registration.payment?.status || registration.status,
-    [FIELD_MAPPING.registrationDate]: formatDate(registration.createdAt),
-    [FIELD_MAPPING.bibNumber]: registration.bibNumber || null,
-    [FIELD_MAPPING.certificateStatus]: registration.certificateStatus || null,
-    [FIELD_MAPPING.resultStatus]: registration.resultStatus || null,
-  };
+const executeWithRetry = async (fn, operationName = "Operation", tracker = { retryCount: 0 }) => {
+  const maxAttempts = 3;
+  const initialDelay = 1000; // 1 second base delay
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Check for simulated failure
+    if (process.env.ZOHO_SIMULATE_FAILURE === "true") {
+      tracker.retryCount = attempt - 1;
+      const simError = new Error("Simulated Zoho API Failure");
+      console.error(`[Zoho CRM] [SIMULATOR] ${operationName} failed (Attempt ${attempt}/${maxAttempts}): Simulated Zoho API Failure`);
+      if (attempt >= maxAttempts) {
+        throw simError;
+      }
+      const delay = initialDelay * Math.pow(2, attempt - 1);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+
+    try {
+      return await fn();
+    } catch (error) {
+      tracker.retryCount = attempt - 1;
+      const errorMsg = error.response?.data
+        ? typeof error.response.data === "string"
+          ? error.response.data
+          : JSON.stringify(error.response.data)
+        : error.message;
+
+      console.error(`[Zoho CRM] ${operationName} failed (Attempt ${attempt}/${maxAttempts}): ${errorMsg}`);
+
+      if (attempt >= maxAttempts) {
+        console.error(`[Zoho CRM] Sync Failed for ${operationName} after ${maxAttempts} attempts.`);
+        throw error;
+      }
+
+      const delay = initialDelay * Math.pow(2, attempt - 1);
+      console.log(`[Zoho CRM] Retry ${attempt} for ${operationName} in ${delay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 };
 
 /**
- * Checks whether the participant already exists in Zoho CRM using registration ID, email, or mobile.
+ * Checks whether the participant already exists in Zoho CRM Contacts using Email.
  * 
- * @param {Object} participantDetails - { registrationId, email, mobile }
+ * @param {string} email - The participant email
  * @param {string} token - The Zoho access token
- * @returns {Promise<Object|null>} The matching Zoho record, or null if not found
+ * @param {Object} tracker - Tracker object to record retry count
+ * @returns {Promise<Object|null>} The matching Zoho Contact record, or null if not found
  */
-export const findParticipant = async (participantDetails, token) => {
-  const { registrationId, email, mobile } = participantDetails;
-
-  const searchId = registrationId ? registrationId.trim() : "";
-  const searchEmail = email ? email.trim() : "";
-  const searchMobile = mobile ? mobile.trim() : "";
-
-  if (!searchId && !searchEmail && !searchMobile) {
-    return null;
-  }
-
-  // Construct combined search criteria: e.g. ((A:equals:a)or((B:equals:b)or(C:equals:c)))
-  const conditions = [];
-  if (searchId) conditions.push(`(${FIELD_MAPPING.registrationId}:equals:${searchId})`);
-  if (searchEmail) conditions.push(`(${FIELD_MAPPING.email}:equals:${searchEmail})`);
-  if (searchMobile) conditions.push(`(${FIELD_MAPPING.mobile}:equals:${searchMobile})`);
-
-  let criteria = "";
-  if (conditions.length === 1) {
-    criteria = conditions[0];
-  } else if (conditions.length === 2) {
-    criteria = `(${conditions[0]}or${conditions[1]})`;
-  } else if (conditions.length === 3) {
-    criteria = `(${conditions[0]}or(${conditions[1]}or${conditions[2]}))`;
-  }
+export const findParticipant = async (email, token, tracker) => {
+  if (!email) return null;
 
   const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
-  const url = `${baseUrl}/Marathon_Participants/search?criteria=${encodeURIComponent(criteria)}`;
+  const url = `${baseUrl}/Contacts/search?email=${encodeURIComponent(email.trim())}`;
 
+  return await executeWithRetry(async () => {
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+        },
+        timeout: 10000,
+      });
+
+      if (response.data && response.data.data && response.data.data.length > 0) {
+        return response.data.data[0];
+      }
+      return null;
+    } catch (error) {
+      if (error.response?.status === 204) {
+        return null; // 204 means no matching contacts found
+      }
+      throw error;
+    }
+  }, "Search Contact by Email", tracker);
+};
+
+/**
+ * Creates a new Contact in Zoho CRM.
+ * 
+ * @param {Object} record - Mapped Zoho CRM Contact record
+ * @param {string} token - The Zoho access token
+ * @param {Object} tracker - Tracker object to record retry count
+ * @returns {Promise<Object>} The API response details
+ */
+export const createParticipant = async (record, token, tracker) => {
+  const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
+  const url = `${baseUrl}/Contacts`;
+
+  console.log("[Zoho CRM] Creating Contact...");
+
+  return await executeWithRetry(async () => {
+    const response = await axios.post(
+      url,
+      { data: [record] },
+      {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    const result = response.data?.data?.[0];
+    if (result && (result.status === "success" || result.code === "SUCCESS")) {
+      console.log("[Zoho CRM] Contact Created successfully");
+      return response.data;
+    }
+    throw new Error(`Failed to create Zoho Contact: ${JSON.stringify(response.data)}`);
+  }, "Create Contact", tracker);
+};
+
+/**
+ * Updates an existing Contact in Zoho CRM by ID.
+ * 
+ * @param {string} zohoContactId - Zoho Contact ID
+ * @param {Object} record - Mapped Zoho CRM Contact record updates
+ * @param {string} token - The Zoho access token
+ * @param {Object} tracker - Tracker object to record retry count
+ * @returns {Promise<Object>} The API response details
+ */
+export const updateParticipant = async (zohoContactId, record, token, tracker) => {
+  const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
+  const url = `${baseUrl}/Contacts/${zohoContactId}`;
+
+  console.log("[Zoho CRM] Updating Contact...");
+
+  return await executeWithRetry(async () => {
+    const response = await axios.put(
+      url,
+      { data: [record] },
+      {
+        headers: {
+          Authorization: `Zoho-oauthtoken ${token}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 10000,
+      }
+    );
+
+    const result = response.data?.data?.[0];
+    if (result && (result.status === "success" || result.code === "SUCCESS")) {
+      console.log("[Zoho CRM] Contact Updated successfully");
+      return response.data;
+    }
+    throw new Error(`Failed to update Zoho Contact: ${JSON.stringify(response.data)}`);
+  }, "Update Contact", tracker);
+};
+
+/**
+ * Performs actual Zoho CRM sync operations. Assumed to be run asynchronously.
+ */
+const runSyncProcess = async (registrationId) => {
+  const tracker = { retryCount: 0 };
+  let record = null;
+  let responseData = null;
   try {
-    const response = await axios.get(url, {
+    const registration = await Registration.findById(registrationId)
+      .populate("marathon")
+      .populate("user");
+    
+    if (!registration) {
+      throw new Error(`Registration not found: ${registrationId}`);
+    }
+
+    const email = registration.runnerDetails?.email;
+    if (!email) {
+      throw new Error(`Registration runner email is missing: ${registrationId}`);
+    }
+
+    record = mapRegistrationToZohoContact(registration);
+
+    // Set sync status to Pending initially in DB
+    await ZohoSyncLog.findOneAndUpdate(
+      { registration: registrationId },
+      {
+        $set: {
+          registrationId,
+          status: "Pending",
+          timestamp: new Date(),
+          error: null,
+          request: record,
+          retryCount: 0
+        }
+      },
+      { upsert: true }
+    );
+
+    // Fetch Token
+    const token = await getAccessToken();
+
+    // Check if Contact exists by Email
+    const existingContact = await findParticipant(email, token, tracker);
+
+    let syncStatus = "Success";
+    let zohoContactId = null;
+
+    if (existingContact) {
+      zohoContactId = existingContact.id;
+      responseData = await updateParticipant(zohoContactId, record, token, tracker);
+      syncStatus = "Updated";
+    } else {
+      const result = await createParticipant(record, token, tracker);
+      zohoContactId = result?.data?.[0]?.details?.id;
+      responseData = result;
+      syncStatus = "Success";
+    }
+
+    // Update log to Success/Updated in database
+    await ZohoSyncLog.updateOne(
+      { registration: registrationId },
+      {
+        $set: {
+          registrationId,
+          zohoContactId,
+          contactId: zohoContactId,
+          status: syncStatus,
+          timestamp: new Date(),
+          syncedAt: new Date(),
+          error: null,
+          response: responseData,
+          retryCount: tracker.retryCount
+        }
+      }
+    );
+
+    const registrationIdString = registration.registrationNumber || registration._id.toString();
+    console.log(`✓ Synced Registration to Zoho CRM\nRegistration ID: ${registrationIdString}\nZoho Contact ID: ${zohoContactId}`);
+
+    return {
+      success: true,
+      registrationId: registrationIdString,
+      zohoContactId,
+      createdOrUpdated: syncStatus === "Success" ? "Created" : "Updated"
+    };
+  } catch (error) {
+    const errorMsg = error.response?.data
+      ? typeof error.response.data === "string"
+        ? error.response.data
+        : JSON.stringify(error.response.data)
+      : error.message;
+
+    console.error(`❌ Zoho Sync Failed\n${errorMsg}`);
+
+    try {
+      await ZohoSyncLog.updateOne(
+        { registration: registrationId },
+        {
+          $set: {
+            registrationId,
+            status: "Failed",
+            timestamp: new Date(),
+            syncedAt: new Date(),
+            error: errorMsg,
+            request: record,
+            response: error.response?.data || { message: error.message },
+            retryCount: tracker.retryCount
+          }
+        }
+      );
+    } catch (dbError) {
+      console.error("[Zoho CRM Sync Log DB Error] Failed to update fail state:", dbError.message);
+    }
+
+    throw new Error(errorMsg);
+  }
+};
+
+/**
+ * Synchronizes a successfully paid participant registration to Zoho CRM's Contacts module.
+ * Runs asynchronously and fails gracefully to prevent registration/payment flows from blocking.
+ * 
+ * @param {string} registrationId - The MongoDB registration ID
+ * @returns {Promise<{success: boolean, message: string}>}
+ */
+export const syncParticipant = async (registrationId) => {
+  // Run the sync process in the background to ensure it never blocks registration
+  runSyncProcess(registrationId).catch((err) => {
+    console.error("[Zoho CRM Background Sync Error]", err);
+  });
+
+  return { success: true, message: "Synchronization started asynchronously" };
+};
+
+/**
+ * Verifies the connection to Zoho CRM by making simple authenticated API requests.
+ * @returns {Promise<{connected: boolean, organization?: string, contactsFound?: number, reason?: string}>}
+ */
+export const verifyConnection = async () => {
+  try {
+    const token = await getAccessToken();
+    const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
+
+    // Fetch one Contact to verify read permission (requires only ZohoCRM.modules.ALL or ZohoCRM.modules.READ)
+    const contactsResponse = await axios.get(`${baseUrl}/Contacts?per_page=1`, {
       headers: {
         Authorization: `Zoho-oauthtoken ${token}`,
       },
       timeout: 10000,
     });
 
-    if (response.data && response.data.data && response.data.data.length > 0) {
-      return response.data.data[0];
-    }
-    return null;
-  } catch (error) {
-    if (error.response?.status === 204) {
-      return null; // Zoho returns 204 when no records match
-    }
-    throw error;
-  }
-};
-
-/**
- * Creates a new participant in Zoho CRM.
- * 
- * @param {Object} record - Mapped Zoho CRM record
- * @param {string} token - The Zoho access token
- * @returns {Promise<Object>} The API response details
- */
-export const createParticipant = async (record, token) => {
-  const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
-  const url = `${baseUrl}/Marathon_Participants`;
-
-  const response = await axios.post(
-    url,
-    { data: [record] },
-    {
-      headers: {
-        Authorization: `Zoho-oauthtoken ${token}`,
-        "Content-Type": "application/json",
-      },
-      timeout: 10000,
-    }
-  );
-
-  const result = response.data?.data?.[0];
-  if (result && (result.status === "success" || result.code === "SUCCESS")) {
-    return result;
-  }
-  throw new Error(`Failed to create Zoho CRM record: ${JSON.stringify(response.data)}`);
-};
-
-/**
- * Updates an existing participant in Zoho CRM by ID.
- * 
- * @param {string} zohoRecordId - Zoho record ID
- * @param {Object} record - Mapped Zoho CRM record updates
- * @param {string} token - The Zoho access token
- * @returns {Promise<Object>} The API response details
- */
-export const updateParticipant = async (zohoRecordId, record, token) => {
-  const baseUrl = zohoConfig.apiBaseUrl.replace(/\/+$/, "");
-  const url = `${baseUrl}/Marathon_Participants/${zohoRecordId}`;
-
-  const response = await axios.put(
-    url,
-    { data: [record] },
-    {
-      headers: {
-        Authorization: `Zoho-oauthtoken ${token}`,
-        "Content-Type": "application/json",
-      },
-      timeout: 10000,
-    }
-  );
-
-  const result = response.data?.data?.[0];
-  if (result && (result.status === "success" || result.code === "SUCCESS")) {
-    return result;
-  }
-  throw new Error(`Failed to update Zoho CRM record: ${JSON.stringify(response.data)}`);
-};
-
-/**
- * Synchronizes a successfully paid participant registration to Zoho CRM's custom module.
- * Automatically performs duplicate detection, handles token refreshes, records status,
- * logs errors structurally, and fails gracefully to prevent UI/UX interruption.
- * 
- * @param {string} registrationId - The MongoDB registration ID
- * @returns {Promise<{success: boolean, status?: string, error?: string}>}
- */
-export const syncParticipant = async (registrationId) => {
-  let registration = null;
-  let email = "unknown";
-  let registrationIdString = registrationId;
-  let syncLog = null;
-
-  try {
-    registration = await Registration.findById(registrationId).populate("marathon");
-    if (!registration) {
-      throw new Error(`Registration not found: ${registrationId}`);
+    let contactsFound = 0;
+    if (contactsResponse.data && Array.isArray(contactsResponse.data.data)) {
+      contactsFound = contactsResponse.data.data.length;
     }
 
-    email = registration.runnerDetails?.email || "unknown";
-    registrationIdString = registration.registrationNumber || registration._id.toString();
-
-    // Create or update local synchronization log, setting status to Pending initially
-    syncLog = await ZohoSyncLog.findOneAndUpdate(
-      { registration: registrationId },
-      {
-        $set: { email, registrationIdString },
-        $inc: { attemptsCount: 1 },
-        $setOnInsert: { status: "Pending" }
-      },
-      { new: true, upsert: true }
-    );
-
-    // Get oauth access token
-    const token = await getAccessToken();
-
-    // Prepare details for search
-    const participantDetails = {
-      registrationId: registrationIdString,
-      email: registration.runnerDetails?.email,
-      mobile: registration.runnerDetails?.phone
+    return {
+      connected: true,
+      organization: "Zoho CRM",
+      contactsFound
     };
-
-    // Check if participant already exists in Zoho CRM
-    const existingRecord = await findParticipant(participantDetails, token);
-    const record = mapRegistrationToZohoRecord(registration);
-
-    let syncStatus = "Success";
-    if (existingRecord) {
-      // Update existing record
-      await updateParticipant(existingRecord.id, record, token);
-      syncStatus = "Updated";
-    } else {
-      // Create new record
-      await createParticipant(record, token);
-      syncStatus = "Success";
-    }
-
-    // Mark sync log as successful/updated and clear errors
-    await ZohoSyncLog.updateOne(
-      { registration: registrationId },
-      {
-        $set: {
-          status: syncStatus,
-          lastSyncAttempt: new Date(),
-          errorDetails: null
-        }
-      }
-    );
-
-    console.log(`[Zoho CRM Sync] Successfully synced registration ${registrationIdString}. Status: ${syncStatus}`);
-    return { success: true, status: syncStatus };
-
   } catch (error) {
-    const timestamp = new Date();
-    const endpoint = error.config?.url || "Unknown Endpoint";
-    const httpStatus = error.response?.status || 500;
-    const errorMessage = error.response?.data
+    const errorMsg = error.response?.data
       ? typeof error.response.data === "string"
         ? error.response.data
         : JSON.stringify(error.response.data)
       : error.message;
 
-    // Structured logging as requested
-    const structuredErrorLog = {
-      timestamp,
-      endpoint,
-      httpStatus,
-      errorMessage,
-      registrationId: registrationIdString,
-      participantEmail: email
+    return {
+      connected: false,
+      reason: errorMsg
     };
-
-    console.error("[Zoho CRM Sync Error]", JSON.stringify(structuredErrorLog, null, 2));
-
-    // Save error state and set status to Failed in MongoDB ZohoSyncLog
-    if (syncLog || registration) {
-      try {
-        await ZohoSyncLog.updateOne(
-          { registration: registrationId },
-          {
-            $set: {
-              status: "Failed",
-              lastSyncAttempt: timestamp,
-              errorDetails: {
-                timestamp,
-                endpoint,
-                httpStatus,
-                errorMessage
-              }
-            }
-          }
-        );
-      } catch (dbError) {
-        console.error("[Zoho CRM DB Error] Failed to write failure sync log:", dbError.message);
-      }
-    }
-
-    // Fail gracefully: Never expose Zoho errors to the user or interrupt the registration flow
-    return { success: false, status: "Failed", error: errorMessage };
   }
 };
+
+/**
+ * Direct synchronous version of participant sync (useful for CLI/Admin tools).
+ */
+export const syncParticipantDirect = runSyncProcess;
 
 // Backwards compatibility alias
 export const syncRegistration = syncParticipant;

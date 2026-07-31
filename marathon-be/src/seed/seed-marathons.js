@@ -61,8 +61,8 @@ const seedMarathons = [
     shortDescription: "Run along one of the world's longest urban beaches at sunrise.",
     description: "Run along one of the world's longest urban beaches at sunrise. The Chennai Marina 42K takes you through the heart of the city — past iconic landmarks, cheering crowds, and the open sea. Whether you are chasing a personal best or crossing your first finish line, this is the race to remember.",
     eventDate: new Date("2027-01-18"),
-    registrationStartDate: new Date("2026-09-01"),
-    registrationEndDate: new Date("2027-01-05"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Marina Beach", city: "Chennai", state: "Tamil Nadu", country: "India" },
     raceCategories: [
       { name: "Full Marathon", distance: "42K", difficulty: "extreme", price: 2499, currency: "INR", maxParticipants: 500, startTime: "5:30 AM", description: "The iconic distance.", isActive: true },
@@ -78,8 +78,8 @@ const seedMarathons = [
     shortDescription: "A scenic run starting from the foothills of Yercaud.",
     description: "A scenic run starting from the foothills of Yercaud. The Salem edition offers a unique blend of rural charm and energetic city crowds. The gentle elevation makes it perfect for runners looking for a course with character.",
     eventDate: new Date("2027-02-22"),
-    registrationStartDate: new Date("2026-10-01"),
-    registrationEndDate: new Date("2027-02-08"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Yercaud Foothills", city: "Salem", state: "Tamil Nadu", country: "India" },
     raceCategories: [
       { name: "10K", distance: "10K", difficulty: "moderate", price: 999, currency: "INR", maxParticipants: 1000, startTime: "6:30 AM", description: "A step up that rewards consistent training.", isActive: true },
@@ -93,8 +93,8 @@ const seedMarathons = [
     shortDescription: "Run through Bengaluru's green heart.",
     description: "Run through Bengaluru's green heart. The Cubbon Half takes you along shaded boulevards and heritage roads in one of India's most vibrant cities. The cool morning air and enthusiastic city crowd make this a favourite among runners returning year after year.",
     eventDate: new Date("2027-03-08"),
-    registrationStartDate: new Date("2026-11-01"),
-    registrationEndDate: new Date("2027-02-20"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Cubbon Park", city: "Bengaluru", state: "Karnataka", country: "India" },
     raceCategories: [
       { name: "Half Marathon", distance: "21K", difficulty: "hard", price: 1499, currency: "INR", maxParticipants: 1000, startTime: "6:00 AM", description: "The sweet spot between endurance and speed.", isActive: true },

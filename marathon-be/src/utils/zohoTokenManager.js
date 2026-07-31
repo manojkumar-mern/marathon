@@ -5,10 +5,30 @@ let accessToken = null;
 let expiresAt = 0; // Epoch timestamp in milliseconds
 
 /**
+ * Validates that all required Zoho OAuth configuration environment variables are present and correct.
+ */
+export const validateZohoConfig = () => {
+  const missing = [];
+  if (!zohoConfig.clientId) missing.push("ZOHO_CLIENT_ID");
+  if (!zohoConfig.clientSecret) missing.push("ZOHO_CLIENT_SECRET");
+  if (!zohoConfig.refreshToken || zohoConfig.refreshToken === "your_refresh_token") {
+    missing.push("ZOHO_REFRESH_TOKEN (value must be exchanged first)");
+  }
+  if (!zohoConfig.accountsUrl) missing.push("ZOHO_ACCOUNTS_URL");
+  if (!zohoConfig.apiBaseUrl) missing.push("ZOHO_API_BASE_URL");
+
+  if (missing.length > 0) {
+    throw new Error(`Zoho configuration is invalid or missing: ${missing.join(", ")}`);
+  }
+};
+
+/**
  * Retrieves a valid Zoho CRM access token, automatically refreshing it if expired or missing.
  * @returns {Promise<string>} The access token.
  */
 export const getAccessToken = async () => {
+  validateZohoConfig();
+
   const now = Date.now();
   // If we have a cached token and it has more than 5 minutes of validity left, reuse it.
   if (accessToken && now < (expiresAt - 5 * 60 * 1000)) {
@@ -32,12 +52,12 @@ export const getAccessToken = async () => {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
+        timeout: 10000,
       }
     );
 
     if (response.data && response.data.access_token) {
       accessToken = response.data.access_token;
-      // Default to 1 hour if expires_in is not provided
       const expiresInSec = response.data.expires_in || 3600;
       expiresAt = Date.now() + (expiresInSec * 1000);
       return accessToken;

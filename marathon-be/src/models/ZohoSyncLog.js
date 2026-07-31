@@ -6,7 +6,19 @@ const zohoSyncLogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
       required: true,
-      unique: true, // Ensuring one log per registration
+      unique: true,
+    },
+    registrationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Registration",
+    },
+    zohoContactId: {
+      type: String,
+      trim: true,
+    },
+    contactId: {
+      type: String,
+      trim: true,
     },
     status: {
       type: String,
@@ -14,30 +26,26 @@ const zohoSyncLogSchema = new mongoose.Schema(
       default: "Pending",
       required: true,
     },
-    email: {
-      type: String,
-      required: true,
-      lowercase: true,
-      trim: true,
-    },
-    registrationIdString: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    lastSyncAttempt: {
+    timestamp: {
       type: Date,
       default: Date.now,
     },
-    attemptsCount: {
+    syncedAt: {
+      type: Date,
+    },
+    error: {
+      type: String,
+      trim: true,
+    },
+    request: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    response: {
+      type: mongoose.Schema.Types.Mixed,
+    },
+    retryCount: {
       type: Number,
       default: 0,
-    },
-    errorDetails: {
-      timestamp: { type: Date },
-      endpoint: { type: String },
-      httpStatus: { type: Number },
-      errorMessage: { type: String },
     },
   },
   { timestamps: true }

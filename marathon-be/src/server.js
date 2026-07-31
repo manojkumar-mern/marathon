@@ -4,6 +4,7 @@ import { env } from "./config/env.js";
 import mongoose from "mongoose";
 import { autoSeed } from "./seed/auto-seed.js";
 import { reminderScheduler } from "./services/reminder.service.js";
+import { verifyConnection } from "./services/zoho.service.js";
 
 // Handle uncaught exceptions and unhandled rejections early
 process.on("uncaughtException", (error) => {
@@ -21,6 +22,18 @@ const start = async () => {
     await autoSeed();
   } catch (err) {
     console.warn("Auto-seed skipped:", err.message);
+  }
+
+  // Verify Zoho CRM connection on startup without crashing the server
+  try {
+    const zohoStatus = await verifyConnection();
+    if (zohoStatus.connected) {
+      console.log("✓ Zoho CRM Connected Successfully");
+    } else {
+      console.error("[Zoho CRM Startup Error] Connection verification failed:", zohoStatus.reason);
+    }
+  } catch (err) {
+    console.error("[Zoho CRM Startup Error] Failed to execute verification:", err.message);
   }
 
   const server = app.listen(env.port, () => {

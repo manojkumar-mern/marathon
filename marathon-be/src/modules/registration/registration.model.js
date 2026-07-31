@@ -109,7 +109,7 @@ const registrationSchema = new mongoose.Schema(
   }
 );
 
-registrationSchema.index({ marathon: 1, user: 1, "raceCategory.categoryId": 1 }, { unique: true });
+registrationSchema.index({ marathon: 1, user: 1, "raceCategory.categoryId": 1 });
 registrationSchema.index({ user: 1, createdAt: -1 });
 registrationSchema.index({ marathon: 1, status: 1 });
 

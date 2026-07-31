@@ -29,12 +29,13 @@ export const createRegistration = async (userId, data) => {
     throw new AppError("Registration window has closed", 400);
   }
 
-  let category = marathon.raceCategories.id(data.raceCategoryId);
-  if (!category) {
+  let category = null;
+  if (data.raceCategoryId) {
     category = marathon.raceCategories.find(
-      (c) => c._id?.toString() === data.raceCategoryId || c.name === data.raceCategoryId
+      (c) => c._id?.toString() === data.raceCategoryId.toString() || c.name === data.raceCategoryId
     );
   }
+
   if (!category) {
     throw new AppError("Selected race category not found in this marathon", 400);
   }
@@ -44,17 +45,20 @@ export const createRegistration = async (userId, data) => {
   }
 
   const existing = await Registration.findOne({
-    marathon: data.marathon,
-    user: userId,
+    marathon: marathon._id,
     "raceCategory.categoryId": category._id,
     status: { $in: ["pending", "confirmed"] },
+    $or: [
+      { "runnerDetails.email": data.runnerDetails?.email },
+      { "runnerDetails.phone": data.runnerDetails?.phone },
+    ],
   });
   if (existing) {
-    throw new AppError("You are already registered for this race category", 409);
+    throw new AppError("A participant with this email or phone is already registered for this race category", 409);
   }
 
   const categoryCount = await Registration.countDocuments({
-    marathon: data.marathon,
+    marathon: marathon._id,
     "raceCategory.categoryId": category._id,
     status: { $in: ["pending", "confirmed"] },
   });
@@ -63,7 +67,7 @@ export const createRegistration = async (userId, data) => {
   }
 
   const registration = await Registration.create({
-    marathon: data.marathon,
+    marathon: marathon._id,
     user: userId,
     raceCategory: {
       categoryId: category._id,

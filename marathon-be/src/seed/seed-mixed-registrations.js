@@ -18,8 +18,8 @@ const seedMarathons = [
     shortDescription: "Run along one of the world's longest urban beaches at sunrise.",
     description: "The Chennai Marina 42K takes you through the heart of the city — past iconic landmarks, cheering crowds, and the open sea. Whether you are chasing a personal best or crossing your first finish line, this is the race to remember.",
     eventDate: new Date("2027-01-18"),
-    registrationStartDate: new Date("2026-09-01"),
-    registrationEndDate: new Date("2027-01-05"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Marina Beach", city: "Chennai", state: "Tamil Nadu", country: "India" },
     bannerImage: "https://images.unsplash.com/photo-1502224562085-639556652f33?q=80&w=1000",
     raceCategories: [
@@ -36,8 +36,8 @@ const seedMarathons = [
     shortDescription: "A scenic run starting from the foothills of Yercaud.",
     description: "A scenic run starting from the foothills of Yercaud. The Salem edition offers a unique blend of rural charm and energetic city crowds. The gentle elevation makes it perfect for runners looking for a course with character.",
     eventDate: new Date("2027-02-22"),
-    registrationStartDate: new Date("2026-10-01"),
-    registrationEndDate: new Date("2027-02-08"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Yercaud Foothills", city: "Salem", state: "Tamil Nadu", country: "India" },
     bannerImage: "https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?q=80&w=1000",
     raceCategories: [
@@ -52,8 +52,8 @@ const seedMarathons = [
     shortDescription: "Run through Bengaluru's green heart.",
     description: "Run through Bengaluru's green heart. The Cubbon Half takes you along shaded boulevards and heritage roads in one of India's most vibrant cities. The cool morning air and enthusiastic city crowd make this a favourite among runners returning year after year.",
     eventDate: new Date("2027-03-08"),
-    registrationStartDate: new Date("2026-11-01"),
-    registrationEndDate: new Date("2027-02-20"),
+    registrationStartDate: new Date("2026-01-01"),
+    registrationEndDate: new Date("2027-12-31"),
     venue: { name: "Cubbon Park", city: "Bengaluru", state: "Karnataka", country: "India" },
     bannerImage: "https://images.unsplash.com/photo-1486218119243-13883505764c?q=80&w=1000",
     raceCategories: [

@@ -22,5 +22,10 @@ router.delete("/automation/jobs/:jobId", adminController.cancelPendingJob);
 router.get("/settings", settingsController.get);
 router.put("/settings", settingsController.update);
 
+// Zoho CRM integration endpoints
+router.get("/zoho/test", adminController.testZohoConnection);
+router.get("/zoho/test-registration", adminController.testRegistrationSync);
+router.post("/zoho/sync/:registrationId", adminController.syncZohoRegistration);
+
 export default router;
 

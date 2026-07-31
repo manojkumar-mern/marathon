@@ -70,20 +70,20 @@ function Hero() {
       {/* ── Content ── */}
       <div
         ref={contentRef}
-        className="relative z-10 w-full max-w-7xl px-5 sm:px-8 lg:px-10 flex flex-col justify-center h-full pt-16"
+        className="relative z-10 w-full max-w-7xl px-5 sm:px-8 lg:px-10 flex flex-col justify-center h-full pt-10"
+        style={{ marginTop: '-40px' }}
       >
         <div className="max-w-4xl">
-          {/* Tagline */}
-          <div data-hero-item className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold text-ember backdrop-blur-sm tracking-wider uppercase mb-6">
-            <span className="size-1.5 rounded-full bg-ember animate-pulse" />
-            Strideforge Endurance Series
-          </div>
-
           <h1
             id="hero-heading"
             data-hero-item
-            className="font-display font-black italic leading-[0.88] tracking-tight text-sf-white uppercase select-none"
-            style={{ fontSize: 'clamp(2.5rem, 8vw, 7.5rem)' }}
+            className="font-display font-black italic uppercase select-none text-sf-white"
+            style={{
+              fontSize: 'clamp(2.2rem, 6.8vw, 6.4rem)',
+              lineHeight: '0.92',
+              letterSpacing: '-0.03em',
+              fontStretch: 'condensed',
+            }}
           >
             ONE ROAD.<br />
             <span className="ember-gradient-text">THOUSANDS</span><br />
@@ -92,10 +92,10 @@ function Hero() {
 
           <p
             data-hero-item
-            className="mt-6 max-w-2xl text-base leading-7 text-muted sm:text-lg sm:leading-8"
+            className="mt-7 max-w-xl text-[0.9375rem] leading-[1.7] tracking-wide text-muted sm:text-base sm:leading-8"
           >
             India's premium marathon event series. Run the city. Feel the crowd.{' '}
-            <span className="text-sf-white/85 font-medium">Push past your boundaries and claim your victory.</span>
+            <span className="text-sf-white/80 font-medium">Push past your boundaries and claim your victory.</span>
           </p>
 
           {/* Quick info row */}
