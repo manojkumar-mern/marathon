@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import { autoSeed } from "./seed/auto-seed.js";
 import { reminderScheduler } from "./services/reminder.service.js";
 import { verifyConnection } from "./services/zoho.service.js";
+import { ensureAdminUser } from "../scripts/create-admin.js";
 
 // Handle uncaught exceptions and unhandled rejections early
 process.on("uncaughtException", (error) => {
@@ -24,6 +25,18 @@ const start = async () => {
     console.warn("Auto-seed skipped:", err.message);
   }
 
+  // ── REMOVE AFTER FIRST SUCCESSFUL DEPLOY ────────────────────────────────
+  // Creates the admin user once in production if it doesn't already exist.
+  // Safe to run on every startup — does nothing if the user already exists.
+  if (env.isProduction) {
+    try {
+      await ensureAdminUser();
+    } catch (err) {
+      console.warn("[Admin bootstrap] Could not ensure admin user:", err.message);
+    }
+  }
+  // ── END REMOVE ───────────────────────────────────────────────────────────
+
   // Verify Zoho CRM connection on startup without crashing the server
   try {
     const zohoStatus = await verifyConnection();
@@ -37,7 +50,10 @@ const start = async () => {
   }
 
   const server = app.listen(env.port, () => {
-    console.log(`🚀 Server running on http://localhost:${env.port} (${env.nodeEnv})`);
+    // RENDER_EXTERNAL_URL is injected automatically by Render in production.
+    // Falls back to localhost for local development.
+    const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${env.port}`;
+    console.log(`🚀 Server running at ${url} (${env.nodeEnv})`);
   });
 
   // Start periodic reminder processing every hour (Missing automation triggers)
