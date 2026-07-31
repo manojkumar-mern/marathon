@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "build": "echo 'No build step required for backend'",
     "seed": "node src/seed/seed-marathons.js",
-    "seed:registrations": "node src/seed/seed-registrations.js"
+    "seed:registrations": "node src/seed/seed-registrations.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "keywords": [],
   "author": "",
