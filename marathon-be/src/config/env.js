@@ -47,7 +47,15 @@ export const env = {
   smtpPass: process.env.SMTP_PASS || "",
   emailFrom: process.env.EMAIL_FROM || "noreply@example.com",
 
-  corsOrigin: process.env.CORS_ORIGIN || (isProduction ? "" : "http://localhost:5173,http://localhost:3000"),
+  corsOrigin: process.env.CORS_ORIGIN || (isProduction
+    ? (() => {
+        console.warn(
+          "[CORS] WARNING: CORS_ORIGIN is not set in production. " +
+          "All browser requests will be blocked. Set CORS_ORIGIN to your frontend URL."
+        );
+        return "";
+      })()
+    : "http://localhost:5173,http://localhost:3000"),
 
   cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || "",

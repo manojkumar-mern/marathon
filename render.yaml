@@ -1,0 +1,93 @@
+services:
+  # ── Backend: Node.js Web Service ───────────────────────────────────────
+  - type: web
+    name: marathon-be
+    runtime: node
+    rootDir: marathon-be
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Render automatically assigns PORT — do not hardcode it
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      # Set to your Render frontend URL e.g. https://marathon-fe.onrender.com
+      - key: CORS_ORIGIN
+        sync: false
+      # Razorpay
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      # Certificate QR codes point to the backend verify endpoint.
+      # Set to your backend Render URL e.g. https://marathon-be.onrender.com
+      - key: VERIFICATION_BASE_URL
+        sync: false
+      # Cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # SMTP (email)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      # n8n automation (optional — leave blank to disable)
+      - key: N8N_WEBHOOK_URL
+        sync: false
+      # Zoho CRM
+      - key: ZOHO_CLIENT_ID
+        sync: false
+      - key: ZOHO_CLIENT_SECRET
+        sync: false
+      - key: ZOHO_REFRESH_TOKEN
+        sync: false
+      - key: ZOHO_REDIRECT_URI
+        sync: false
+      - key: ZOHO_ACCOUNTS_URL
+        value: https://accounts.zoho.com
+      - key: ZOHO_API_BASE_URL
+        value: https://www.zohoapis.com/crm/v2
+      # Branding
+      - key: APP_NAME
+        sync: false
+      - key: COMPANY_NAME
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: WEBSITE_URL
+        sync: false
+
+  # ── Frontend: Vite Static Site ─────────────────────────────────────────
+  - type: web
+    name: marathon-fe
+    runtime: static
+    rootDir: marathon-fe
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      # Set to your Render backend URL + /api
+      # e.g. https://marathon-be.onrender.com/api
+      - key: VITE_API_URL
+        sync: false

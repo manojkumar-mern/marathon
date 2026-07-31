@@ -1,5 +1,8 @@
 import { api } from '../../services/api'
 
+// Re-use the same base URL that the api module resolved from VITE_API_URL
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+
 async function silentFallback(defaultValue) {
   return defaultValue
 }
@@ -42,13 +45,11 @@ export const certificateService = {
   },
 
   async preview(id) {
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-    window.open(`${base}/certificates/${id}/preview`, '_blank')
+    window.open(`${BASE_URL}/certificates/${id}/preview`, '_blank')
   },
 
   async download(id) {
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-    window.open(`${base}/certificates/${id}/download`, '_blank')
+    window.open(`${BASE_URL}/certificates/${id}/download`, '_blank')
   },
 
   async sendEmail(id) {

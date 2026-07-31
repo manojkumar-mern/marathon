@@ -135,7 +135,9 @@ function formatTime(seconds) {
 }
 
 function getVerificationUrl(certNumber) {
-  const base = process.env.VERIFICATION_BASE_URL || "http://localhost:5000";
+  // VERIFICATION_BASE_URL must point to the backend API server (not the frontend).
+  // In production, set it to your deployed backend URL e.g. https://marathon-be.onrender.com
+  const base = (process.env.VERIFICATION_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
   return `${base}/api/certificates/verify/${certNumber}`;
 }
 
