@@ -1,7 +1,6 @@
 import axios from "axios";
 import { env } from "../config/env.js";
-
-const BASE_URL = env.n8nWebhookUrl;
+import { Automation, AutomationLog } from "./automation.model.js";
 
 function logError(context, error) {
   const msg = error?.response?.data
@@ -13,10 +12,9 @@ function logError(context, error) {
   console.error(`[n8n] ${context} failed — ${msg}`);
 }
 
-import { Automation, AutomationLog } from "./automation.model.js";
-
 async function sendToWebhook(endpoint, payload) {
-  if (!BASE_URL) {
+  const baseUrl = env.n8nWebhookUrl;
+  if (!baseUrl) {
     console.warn("[n8n] N8N_WEBHOOK_URL is not set — skipping automation");
     return null;
   }
@@ -34,7 +32,7 @@ async function sendToWebhook(endpoint, payload) {
 
   const startTime = Date.now();
   try {
-    const url = `${BASE_URL.replace(/\/+$/, "")}/${endpoint}`;
+    const url = `${baseUrl.replace(/\/+$/, "")}/${endpoint}`;
     const { data } = await axios.post(url, payload, {
       headers: { "Content-Type": "application/json" },
       timeout: 10_000,

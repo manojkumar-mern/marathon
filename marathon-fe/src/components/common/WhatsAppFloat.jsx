@@ -1,8 +1,10 @@
 import { FaWhatsapp } from 'react-icons/fa6'
-import { Link } from 'react-router-dom'
 import { BRAND } from '../../config/brand'
 
 function WhatsAppFloat({ visible = true }) {
+  const whatsappNumber = BRAND.contactPhone.replace(/[^0-9]/g, '')
+  const whatsappUrl = `https://wa.me/${whatsappNumber}`
+
   return (
     <div className={`group fixed bottom-6 right-6 z-[100] transition-all duration-500 ease-out ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75 pointer-events-none'}`}>
       {/* Tooltip */}
@@ -27,13 +29,15 @@ function WhatsAppFloat({ visible = true }) {
       />
 
       {/* Button */}
-      <Link
-        to="/contact"
-        aria-label={`Contact ${BRAND.name} support`}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Contact ${BRAND.name} support on WhatsApp`}
         className="relative flex size-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/30 transition-transform duration-200 hover:scale-110 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
       >
         <FaWhatsapp className="text-2xl" aria-hidden="true" />
-      </Link>
+      </a>
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 @theme {
   /* ─── Display font (headings, numbers, hero) ─────────── */
-  --font-display: 'Barlow Condensed', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 
   /* ─── Colour palette ─────────────────────────────────── */
   --color-obsidian:    #080C10;

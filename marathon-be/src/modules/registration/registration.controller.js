@@ -23,14 +23,6 @@ export const create = asyncHandler(async (req, res) => {
     .select("title eventDate venue")
     .lean();
 
-  // Use runner details from the registration as source of truth for email
-  const emailUser = {
-    fullName: registration.runnerDetails?.fullName || req.user.fullName || "Runner",
-    email: registration.runnerDetails?.email || req.user.email,
-  };
-
-  sendRegistrationConfirmationEmail(emailUser, registration, marathon);
-
   return successResponse(res, {
     statusCode: 201,
     message: "Registration submitted successfully",

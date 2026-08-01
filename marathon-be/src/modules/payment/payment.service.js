@@ -10,6 +10,7 @@ import {
   REGISTRATION_PAYMENT_STATUS,
 } from "../../services/payment/payment.constants.js";
 import { syncParticipant } from "../../services/zoho.service.js";
+import { sendRegistrationConfirmationEmail } from "../../services/email.service.js";
 
 const generateReceipt = () => {
   const ts = Date.now().toString(36).toUpperCase();
@@ -178,9 +179,21 @@ export const verifyPayment = async (userId, data) => {
       bibNumber: registration.bibNumber || null,
       amountPaid: payment.amount,
       paymentStatus: registration.payment?.status || registration.status,
+      category: registration.raceCategory?.name || null,
+      registrationDate: registration.createdAt || null,
     });
   } catch (error) {
     console.error("[n8n-automation-error] Failed to trigger registration success webhook from verifyPayment:", error);
+  }
+
+  try {
+    const emailUser = {
+      fullName: registration.runnerDetails?.fullName || "Runner",
+      email: registration.runnerDetails?.email,
+    };
+    await sendRegistrationConfirmationEmail(emailUser, registration, marathon);
+  } catch (emailErr) {
+    console.error("[Email Error] Failed to send registration confirmation email from verifyPayment:", emailErr);
   }
 
   try {
@@ -257,9 +270,21 @@ export const handleWebhook = async (rawBody, signature, event) => {
             bibNumber: registration.bibNumber || null,
             amountPaid: payment.amount,
             paymentStatus: registration.payment?.status || registration.status,
+            category: registration.raceCategory?.name || null,
+            registrationDate: registration.createdAt || null,
           });
         } catch (error) {
           console.error("[n8n-automation-error] Failed to trigger registration success webhook from handleWebhook:", error);
+        }
+
+        try {
+          const emailUser = {
+            fullName: registration.runnerDetails?.fullName || "Runner",
+            email: registration.runnerDetails?.email,
+          };
+          await sendRegistrationConfirmationEmail(emailUser, registration, marathon);
+        } catch (emailErr) {
+          console.error("[Email Error] Failed to send registration confirmation email from handleWebhook:", emailErr);
         }
 
         try {

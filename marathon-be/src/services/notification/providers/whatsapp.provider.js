@@ -30,7 +30,7 @@ export const whatsappProvider = {
     console.log(`[WhatsApp Provider] Dispatched message (${templateName || "default"}) to ${recipient.phone}`);
 
     return {
-      success: true,
+      success: !!response,
       messageId: response?.messageId || "mock-whatsapp-id",
     };
   },

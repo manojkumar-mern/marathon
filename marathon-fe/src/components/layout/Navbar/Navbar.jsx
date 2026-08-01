@@ -96,7 +96,7 @@ function Navbar() {
         className={`sticky top-0 z-50 transition-all duration-500 border-b ${
           isScrolled
             ? 'border-white/10 bg-obsidian/75 shadow-lg shadow-black/25 backdrop-blur-md'
-            : 'bg-transparent border-transparent'
+            : 'absolute left-0 right-0 bg-transparent border-transparent'
         }`}
       >
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">

@@ -70,8 +70,7 @@ function Hero() {
       {/* ── Content ── */}
       <div
         ref={contentRef}
-        className="relative z-10 w-full max-w-7xl px-5 sm:px-8 lg:px-10 flex flex-col justify-center h-full pt-10"
-        style={{ marginTop: '-40px' }}
+        className="relative z-10 w-full max-w-7xl px-5 sm:px-8 lg:px-10 flex flex-col justify-center h-full pt-[72px] lg:pt-24"
       >
         <div className="max-w-4xl">
           <h1
