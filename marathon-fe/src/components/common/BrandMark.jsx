@@ -7,7 +7,7 @@ import logoSvg from "../../assets/images/logos/marathon-logo.webp";
  * The brand name is sourced from BRAND.name — never hardcoded here.
  * Logo uses the production SVG runner mark (logo.svg).
  */
-function BrandMark() {
+function BrandMark({ textClass = 'text-sf-white' }) {
   return (
     <Link
       className="inline-flex items-center gap-2.5 rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
@@ -23,7 +23,7 @@ function BrandMark() {
       </span>
 
       <span
-        className="font-display text-lg font-black italic tracking-[0.06em] text-sf-white"
+        className={`font-display text-lg font-black italic tracking-[0.06em] ${textClass}`}
         style={{ letterSpacing: '0.05em' }}
       >
         {BRAND.name}

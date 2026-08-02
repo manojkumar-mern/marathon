@@ -290,7 +290,7 @@ function EventDetails() {
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:sticky lg:top-28">
+          <aside className="lg:sticky lg:top-28 h-fit">
             <div className="rounded-3xl border border-ember/20 bg-carbon p-7 shadow-xl">
               <p className="text-xs font-bold uppercase tracking-widest text-ember">Register Now</p>
               <p className="mt-3 font-display text-2xl font-black italic text-sf-white">{event.title}</p>

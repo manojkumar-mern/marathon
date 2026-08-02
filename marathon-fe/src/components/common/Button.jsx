@@ -11,7 +11,7 @@ const variants = {
   outline:
     'border border-steel text-muted hover:border-ember hover:text-ember',
   light:
-    'bg-sf-white text-obsidian hover:bg-ice hover:-translate-y-0.5',
+    'bg-white text-volt hover:bg-white/90 hover:text-volt hover:-translate-y-0.5 shadow-lg shadow-black/10',
   ghost:
     'border border-steel/60 text-muted hover:border-steel hover:text-sf-white',
 }

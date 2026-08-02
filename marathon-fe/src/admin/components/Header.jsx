@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { FaBars, FaBell, FaChevronDown, FaGear, FaArrowRightFromBracket, FaArrowLeft } from 'react-icons/fa6'
+import { FaBars, FaBell, FaChevronDown, FaGear, FaArrowRightFromBracket, FaArrowLeft, FaSun, FaMoon } from 'react-icons/fa6'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/useAuth'
 import Breadcrumbs from './Breadcrumbs'
@@ -16,6 +16,19 @@ function Header({ onMenuClick }) {
   const [notifLoading, setNotifLoading] = useState(false)
   const dropdownRef = useRef(null)
   const notifRef = useRef(null)
+
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('admin-theme') || 'light'
+  })
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+    localStorage.setItem('admin-theme', theme)
+  }, [theme])
 
   const fetchNotifications = useCallback(async () => {
     setNotifLoading(true)
@@ -76,6 +89,14 @@ function Header({ onMenuClick }) {
       </div>
 
       <div className="flex items-center gap-2">
+        <button
+          onClick={() => setTheme((prev) => (prev === 'light' ? 'dark' : 'light'))}
+          className="flex size-8 items-center justify-center rounded-lg text-muted-dim hover:bg-steel/40 hover:text-sf-white transition-colors"
+          aria-label="Toggle dark mode"
+        >
+          {theme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />}
+        </button>
+
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen((prev) => !prev)}

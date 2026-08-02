@@ -56,4 +56,13 @@ export const certificateService = {
     const res = await api.post(`/certificates/${id}/email`)
     return res.data
   },
+
+  async getStatus(registrationId) {
+    const res = await api.get(`/certificates/status/${registrationId}`)
+    return res.data
+  },
+
+  async verify(certNumber) {
+    window.open(`${BASE_URL}/certificates/verify/${certNumber}`, '_blank')
+  },
 }

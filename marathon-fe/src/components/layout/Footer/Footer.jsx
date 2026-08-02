@@ -33,7 +33,7 @@ const legalLinks = [
 
 function Footer() {
   return (
-    <footer className="border-t border-steel bg-[#050709] text-muted">
+    <footer className="border-t border-steel bg-[#0F172A] text-muted">
       <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10">
 
         {/* Main grid */}
@@ -54,7 +54,7 @@ function Footer() {
                   href={href}
                   rel="noopener noreferrer"
                   target="_blank"
-                  className="flex size-9 items-center justify-center rounded-full border border-steel text-muted transition-colors hover:border-ember/60 hover:text-ember focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                  className="flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition-all duration-300 hover:bg-ember hover:border-ember hover:text-white hover:scale-115 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
                   {createElement(Icon, { className: 'text-sm', 'aria-hidden': true })}
                 </a>
@@ -72,9 +72,10 @@ function Footer() {
                 {quickLinks.map((link) => (
                   <li key={link.to}>
                     <Link
-                      className="text-sm transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                      className="group flex items-center text-sm text-slate-300 transition-all duration-200 hover:translate-x-2 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                       to={link.to}
                     >
+                      <span className="opacity-0 -ml-4 mr-1.5 transition-all duration-200 group-hover:opacity-100 group-hover:ml-0 text-ember font-bold">→</span>
                       {link.label}
                     </Link>
                   </li>
@@ -93,9 +94,10 @@ function Footer() {
                 {raceLinks.map((link) => (
                   <li key={link.to}>
                     <Link
-                      className="text-sm transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                      className="group flex items-center text-sm text-slate-300 transition-all duration-200 hover:translate-x-2 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                       to={link.to}
                     >
+                      <span className="opacity-0 -ml-4 mr-1.5 transition-all duration-200 group-hover:opacity-100 group-hover:ml-0 text-ember font-bold">→</span>
                       {link.label}
                     </Link>
                   </li>
@@ -113,16 +115,18 @@ function Footer() {
               <li>
                 <a
                   href={`mailto:${BRAND.supportEmail}`}
-                  className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                  className="group flex items-center text-slate-300 transition-all duration-200 hover:translate-x-2 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
+                  <span className="opacity-0 -ml-4 mr-1.5 transition-all duration-200 group-hover:opacity-100 group-hover:ml-0 text-ember font-bold">→</span>
                   {BRAND.supportEmail}
                 </a>
               </li>
               <li>
                 <a
                   href={`tel:${BRAND.contactPhone.replace(/[^+\d]/g, '')}`}
-                  className="transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                  className="group flex items-center text-slate-300 transition-all duration-200 hover:translate-x-2 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 >
+                  <span className="opacity-0 -ml-4 mr-1.5 transition-all duration-200 group-hover:opacity-100 group-hover:ml-0 text-ember font-bold">→</span>
                   {BRAND.contactPhone}
                 </a>
               </li>
@@ -136,7 +140,7 @@ function Footer() {
         {/* Newsletter line */}
         <div className="mt-14 rounded-2xl border border-steel/50 bg-white/[0.02] px-6 py-5 sm:flex sm:items-center sm:justify-between">
           <p className="text-sm text-muted">
-            <span className="font-semibold text-sf-white">Stay race-ready.</span>{' '}
+            <span className="font-semibold text-white">Stay race-ready.</span>{' '}
             Get event updates, training tips, and early registration access.
           </p>
           <Link
@@ -156,7 +160,7 @@ function Footer() {
             {legalLinks.map((link) => (
               <Link
                 key={link.to}
-                className="text-xs text-muted-dim transition-colors hover:text-sf-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                className="text-xs text-muted-dim transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
                 to={link.to}
               >
                 {link.label}

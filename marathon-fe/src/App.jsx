@@ -18,6 +18,8 @@ const Home           = lazy(() => import('./pages/Home'))
 const Login          = lazy(() => import('./pages/Login'))
 const NotFound       = lazy(() => import('./pages/NotFound'))
 const Registration   = lazy(() => import('./pages/Registration'))
+const ResultsPage    = lazy(() => import('./pages/ResultsPage'))
+const CertificatesPage = lazy(() => import('./pages/CertificatesPage'))
 
 function AppContent() {
   const [isLoading, setIsLoading] = useState(true)
@@ -53,6 +55,8 @@ function AppContent() {
           <Route path="/about"             element={<ContentPage type="about" />} />
           <Route path="/register"          element={<Registration />} />
           <Route path="/login"             element={<Login />} />
+          <Route path="/results"           element={<ResultsPage />} />
+          <Route path="/certificates"      element={<CertificatesPage />} />
           {/* Legacy /dashboard → unified admin dashboard */}
           <Route path="/dashboard"         element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/privacy"           element={<ContentPage type="privacy" />} />

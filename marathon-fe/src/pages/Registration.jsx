@@ -366,7 +366,7 @@ function Registration() {
   const handleBack = useCallback(() => { setErrors({}); setStep((s)=>Math.max(s-1,0)); window.scrollTo({top:0,behavior:'smooth'}) }, [])
 
   return (
-    <main className="min-h-screen bg-obsidian py-14 sm:py-20">
+    <main className="min-h-screen bg-obsidian py-20 sm:py-28">
       <SEO title="Register" description={`Register for ${BRAND.name} marathon events. Choose your event, category, and complete secure checkout.`} url="/register" />
       <div className="mx-auto max-w-4xl px-5 sm:px-8">
 

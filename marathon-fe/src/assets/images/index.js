@@ -5,10 +5,10 @@
  * ───────────────────────────────────────────────────────────────────────── */
 
 /* ── Hero ────────────────────────────────────────────────────────────── */
-import heroMarathonStart from './hero/marathon-start.webp'
+import heroMarathonStart from './hero/marathon-start.png'
 
 /* ── About ───────────────────────────────────────────────────────────── */
-import aboutRunner from './about/about.webp'
+import aboutRunner from './about/about.png'
 
 /* ── Events ──────────────────────────────────────────────────────────── */
 import eventChennai    from './events/chennai-marina.webp'

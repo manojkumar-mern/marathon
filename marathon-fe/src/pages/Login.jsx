@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams, Navigate } from 'react-router-dom'
 import { FaArrowRight, FaSpinner, FaCheck, FaCircleExclamation } from 'react-icons/fa6'
 import SEO from '../components/common/SEO'
 import BrandMark from '../components/common/BrandMark'
@@ -24,8 +24,7 @@ function Login() {
   const redirect = searchParams.get('redirect') || '/'
 
   if (isAuthenticated) {
-    navigate(redirect, { replace: true })
-    return null
+    return <Navigate to={redirect} replace />
   }
 
   const upd = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }))

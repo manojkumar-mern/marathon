@@ -4,7 +4,7 @@ import { gsap } from 'gsap'
 import Button from '../../common/Button'
 
 /* ─── Hero assets ─────────────────────────────────────────────────── */
-import heroImage from '../../../assets/images/hero/marathon-start.webp'
+import heroImage from '../../../assets/images/hero/marathon-start.png'
 
 /* ─── Next event info ─────────────────────────────────────────────── */
 const NEXT_EVENT = {
@@ -51,8 +51,8 @@ function Hero() {
     >
       {/* ── Cinematic background ── */}
       <img
-        alt="Thousands of marathon runners at the start line on Marina Beach, Chennai at golden hour sunrise"
-        className="absolute inset-0 size-full object-cover object-[50%_60%] select-none pointer-events-none"
+        alt="Thousands of marathon runners at the start line on Marina Beach, Chennai"
+        className="absolute inset-0 size-full object-cover object-[80%_center] select-none pointer-events-none"
         fetchPriority="high"
         src={heroImage}
       />
@@ -60,11 +60,19 @@ function Hero() {
       {/* ── Gradient overlays for contrast & premium feel ── */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-r from-obsidian/95 via-obsidian/80 to-obsidian/30"
+        className="absolute inset-0 bg-black/20"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-obsidian via-obsidian/20 to-transparent"
+        className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/60 to-transparent"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"
       />
 
       {/* ── Content ── */}
@@ -76,7 +84,7 @@ function Hero() {
           <h1
             id="hero-heading"
             data-hero-item
-            className="font-display font-black italic uppercase select-none text-sf-white"
+            className="font-display font-black italic uppercase select-none text-white"
             style={{
               fontSize: 'clamp(2.2rem, 6.8vw, 6.4rem)',
               lineHeight: '0.92',
@@ -91,10 +99,10 @@ function Hero() {
 
           <p
             data-hero-item
-            className="mt-7 max-w-xl text-[0.9375rem] leading-[1.7] tracking-wide text-muted sm:text-base sm:leading-8"
+            className="mt-7 max-w-xl text-[0.9375rem] leading-[1.7] tracking-wide text-white/70 sm:text-base sm:leading-8"
           >
             India's premium marathon event series. Run the city. Feel the crowd.{' '}
-            <span className="text-sf-white/80 font-medium">Push past your boundaries and claim your victory.</span>
+            <span className="text-white font-medium">Push past your boundaries and claim your victory.</span>
           </p>
 
           {/* Quick info row */}
@@ -102,12 +110,12 @@ function Hero() {
             data-hero-item
             className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-white/5 pt-6"
           >
-            <span className="flex items-center gap-2 text-sm font-medium text-sf-white/80">
+            <span className="flex items-center gap-2 text-sm font-medium text-white/80">
               <FaCalendarDays className="text-ember text-xs" />
               {NEXT_EVENT.date}
             </span>
             <span className="h-3.5 w-px bg-white/10 hidden sm:block" aria-hidden="true" />
-            <span className="flex items-center gap-2 text-sm font-medium text-sf-white/80">
+            <span className="flex items-center gap-2 text-sm font-medium text-white/80">
               <FaLocationDot className="text-ember text-xs" />
               {NEXT_EVENT.location}
             </span>
@@ -124,7 +132,7 @@ function Hero() {
               Register Now{' '}
               <FaArrowRight aria-hidden="true" className="text-xs ml-1" />
             </Button>
-            <Button to="/events" variant="ghost" className="h-12 px-8 text-sm uppercase tracking-wider font-bold border border-white/20 text-sf-white hover:border-ember hover:text-ember bg-transparent">
+            <Button to="/events" variant="ghost" className="h-12 px-8 text-sm uppercase tracking-wider font-bold border border-white/20 text-white hover:border-ember hover:text-ember bg-transparent">
               Explore Events
             </Button>
           </div>
@@ -138,12 +146,12 @@ function Hero() {
         aria-label="Scroll to next section"
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 cursor-pointer transition-opacity duration-300 hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember z-20"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/30 max-sm:hidden">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-sf-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] max-sm:hidden">
           Scroll
         </span>
-        <div className="relative h-8 w-px overflow-hidden rounded-full bg-white/10">
+        <div className="relative h-8 w-0.5 overflow-hidden rounded-full bg-black/40 backdrop-blur-sm">
           <div
-            className="absolute left-0 top-0 w-full rounded-full bg-ember/50"
+            className="absolute left-0 top-0 w-full rounded-full bg-ember-deep"
             style={{
               height: '40%',
               animation: 'heroScrollBounce 1.6s ease-in-out infinite',
@@ -152,7 +160,7 @@ function Hero() {
         </div>
         <FaChevronDown
           aria-hidden="true"
-          className="text-ember/50 -mt-1"
+          className="text-ember-deep drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] -mt-1 text-sm"
           style={{ animation: 'heroChevronBounce 1.6s ease-in-out infinite' }}
         />
       </button>

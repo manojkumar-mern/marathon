@@ -46,8 +46,8 @@ function BarChart({
     <ResponsiveContainer width="100%" height={height}>
       <RechartsBarChart
         data={data}
-        layout={layout}
-        margin={{ top: 5, right: 10, left: isVertical ? 0 : -20, bottom: 5 }}
+        layout={isVertical ? 'horizontal' : 'vertical'}
+        margin={{ top: 5, right: 10, left: isVertical ? 0 : 0, bottom: 5 }}
         barSize={isVertical ? 24 : 16}
       >
         <CartesianGrid
@@ -93,7 +93,7 @@ function BarChart({
           </>
         )}
         <Tooltip content={<CustomTooltip format={format} />} />
-        <Bar dataKey={yKey} radius={[0, 4, 4, 0]}>
+        <Bar dataKey={yKey} radius={isVertical ? [4, 4, 0, 0] : [0, 4, 4, 0]}>
           {useDistinctColors
             ? data.map((entry, i) => (
                 <Cell key={i} fill={entry.color || BAR_COLORS[i % BAR_COLORS.length]} />

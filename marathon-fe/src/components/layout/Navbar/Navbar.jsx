@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FaBars, FaXmark } from 'react-icons/fa6'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import BrandMark from '../../common/BrandMark'
 import Button from '../../common/Button'
 import useEdgeSwipe from '../../../hooks/useEdgeSwipe'
@@ -28,15 +28,15 @@ const menuItems = [
   {
     label: 'Results',
     submenu: [
-      { label: 'Race Results', to: '/login' },
-      { label: 'Leaderboard', to: '/login' },
+      { label: 'Race Results', to: '/results?tab=my-results' },
+      { label: 'Leaderboard', to: '/results?tab=leaderboard' },
     ],
   },
   {
     label: 'Certificates',
     submenu: [
-      { label: 'Download Certificate', to: '/login' },
-      { label: 'Verify Certificate', to: '/login' },
+      { label: 'Download Certificate', to: '/certificates?tab=download' },
+      { label: 'Verify Certificate', to: '/certificates?tab=verify' },
     ],
   },
   {
@@ -51,10 +51,14 @@ const menuItems = [
 function Navbar() {
   const [isOpen, setIsOpen]       = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const location                  = useLocation()
   const menuButtonRef             = useRef(null)
   const openNav  = useCallback(() => setIsOpen(true),  [])
   const closeNav = useCallback(() => setIsOpen(false), [])
   useEdgeSwipe(openNav, closeNav, isOpen)
+
+  const isHomePage = location.pathname === '/'
+  const showSolidState = isScrolled || !isHomePage
 
   useEffect(() => {
     const update = () => setIsScrolled(window.scrollY > 20)
@@ -93,14 +97,14 @@ function Navbar() {
   return (
     <>
       <header
-        className={`sticky top-0 z-50 transition-all duration-500 border-b ${
-          isScrolled
-            ? 'border-white/10 bg-obsidian/75 shadow-lg shadow-black/25 backdrop-blur-md'
+        className={`fixed top-0 z-50 w-full transition-all duration-500 border-b ${
+          showSolidState
+            ? 'border-steel/80 bg-obsidian/75 shadow-lg shadow-steel/50 backdrop-blur-md'
             : 'absolute left-0 right-0 bg-transparent border-transparent'
         }`}
       >
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:h-20 lg:px-10">
-          <BrandMark />
+          <BrandMark textClass={showSolidState ? 'text-sf-white' : 'text-white'} />
 
           {/* Desktop nav links */}
           <nav aria-label="Primary navigation" className="hidden lg:block">
@@ -111,7 +115,9 @@ function Navbar() {
                     <li key={item.label} className="group relative py-2">
                       <button
                         type="button"
-                        className="flex items-center gap-1 text-sm font-medium tracking-wide text-muted hover:text-sf-white transition-colors duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember"
+                        className={`flex items-center gap-1 text-sm font-medium tracking-wide transition-colors duration-200 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
+                          showSolidState ? 'text-sf-white hover:text-ember' : 'text-white hover:text-white/85'
+                        }`}
                       >
                         {item.label}
                         <svg
@@ -126,12 +132,12 @@ function Navbar() {
                       </button>
                       {/* Dropdown Menu */}
                       <div className="absolute left-1/2 top-full z-50 pt-2 w-52 -translate-x-1/2 scale-95 opacity-0 pointer-events-none group-hover:scale-100 group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200">
-                        <div className="rounded-2xl border border-white/10 bg-obsidian/95 p-2 shadow-2xl backdrop-blur-xl">
+                        <div className="rounded-2xl border border-steel bg-carbon/95 p-2 shadow-2xl backdrop-blur-xl">
                           {item.submenu.map((sub) => (
                             <Link
                               key={sub.label}
                               to={sub.to}
-                              className="block rounded-xl px-4 py-2.5 text-xs font-semibold text-muted hover:bg-white/5 hover:text-sf-white transition-colors"
+                              className="block rounded-xl px-4 py-2.5 text-xs font-semibold text-sf-white hover:bg-steel/45 hover:text-ember transition-colors"
                             >
                               {sub.label}
                             </Link>
@@ -148,8 +154,10 @@ function Navbar() {
                       className={({ isActive }) =>
                         `text-sm font-medium tracking-wide transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember ${
                           isActive
-                            ? 'text-sf-white'
-                            : 'text-muted hover:text-sf-white'
+                            ? 'text-ember font-bold'
+                            : showSolidState
+                            ? 'text-sf-white hover:text-ember'
+                            : 'text-white hover:text-white/85'
                         }`
                       }
                       to={item.to}
@@ -174,7 +182,11 @@ function Navbar() {
             aria-controls="mobile-menu"
             aria-expanded={isOpen}
             aria-label={isOpen ? 'Close navigation' : 'Open navigation'}
-            className="grid size-10 place-items-center rounded-full border border-steel text-sf-white transition-colors hover:border-steel-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember lg:hidden"
+            className={`grid size-10 place-items-center rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ember lg:hidden ${
+              showSolidState
+                ? 'border-steel text-sf-white hover:border-steel-light'
+                : 'border-white/20 text-white hover:border-white/40'
+            }`}
             type="button"
             onClick={() => setIsOpen((v) => !v)}
           >
@@ -221,7 +233,7 @@ function Navbar() {
                     <span className="block px-4 py-1 text-xs font-bold uppercase tracking-wider text-ember">
                       {item.label}
                     </span>
-                    <ul className="mt-1 pl-4 space-y-1 border-l border-white/5">
+                    <ul className="mt-1 pl-4 space-y-1 border-l border-steel">
                       {item.submenu.map((sub) => (
                         <li key={sub.label}>
                           <Link

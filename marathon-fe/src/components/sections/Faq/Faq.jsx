@@ -32,7 +32,7 @@ function Faq() {
         <div className="divide-y divide-steel border-y border-steel">
           {faqItems.map(([question, answer]) => (
             <details key={question} className="group py-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-ember focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember rounded-lg">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember rounded-lg">
                 {question}
                 <span
                   aria-hidden="true"

@@ -38,4 +38,15 @@ export const resultService = {
     const res = await api.post(`/results/unpublish/${marathonId}`)
     return res.data
   },
+
+  async getLeaderboard(marathonId, params = {}) {
+    const q = new URLSearchParams(params).toString()
+    const res = await api.get(`/results/leaderboard/${marathonId}${q ? `?${q}` : ''}`)
+    return res.data
+  },
+
+  async getParticipantResult(registrationId) {
+    const res = await api.get(`/results/registration/${registrationId}`)
+    return res.data.result
+  },
 }

@@ -299,7 +299,7 @@ function ContentPage({ type }) {
             <div className="divide-y divide-steel border-y border-steel">
               {(showAllFaq ? faqItems : faqItems.slice(0, 6)).map(([q, a]) => (
                 <details key={q} className="group py-6">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 font-semibold text-sf-white transition-colors hover:text-volt focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember rounded-lg">
                     {q}
                     <span
                       aria-hidden="true"
