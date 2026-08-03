@@ -197,7 +197,7 @@ function AdminSettings() {
           </div>
         )}
 
-        <div className="mb-6 flex gap-1 rounded-xl border border-steel/60 bg-carbon p-1.5 overflow-x-auto w-fit">
+        <div className="mb-6 flex gap-1 rounded-xl border border-steel/60 bg-carbon p-1.5 overflow-x-auto w-full sm:w-fit">
           {TABS.map((t) => (
             <button
               key={t.key}

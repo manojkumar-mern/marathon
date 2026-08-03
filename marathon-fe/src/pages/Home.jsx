@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   FaArrowRight, FaCalendarDays, FaLocationDot, FaFlag, FaCheck
@@ -36,7 +36,7 @@ function FeaturedRegistration() {
           </div>
         </ScrollReveal>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {events.slice(0, 3).map((event) => {
             const slotsLeft = event.slotsRemaining
             const totalSlots = event.totalSlots
@@ -45,10 +45,10 @@ function FeaturedRegistration() {
             return (
               <article
                 key={event.id}
-                className="group flex flex-col overflow-hidden rounded-3xl border border-steel bg-carbon transition-all duration-300 hover:-translate-y-1 hover:border-ember/40"
+                className="group flex flex-row sm:flex-col overflow-hidden rounded-2xl sm:rounded-3xl border border-steel bg-carbon transition-all duration-300 hover:-translate-y-1 hover:border-ember/40 p-2 sm:p-0"
               >
                 {/* Image */}
-                <div className="relative overflow-hidden aspect-[16/10]">
+                <div className="relative overflow-hidden rounded-xl sm:rounded-none aspect-square w-24 sm:w-full sm:aspect-[16/10] shrink-0">
                   <img
                     alt={`${event.title} — race event`}
                     className="size-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -56,35 +56,35 @@ function FeaturedRegistration() {
                     decoding="async"
                     src={event.image}
                   />
-                  <span className={`absolute right-4 top-4 rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${statusColors[event.status] || 'bg-amber-500/15 text-amber-400 border-amber-500/30'}`}>
+                  <span className={`absolute right-2 top-2 sm:right-4 sm:top-4 rounded-full border px-2 sm:px-3 py-0.5 sm:py-1 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider ${statusColors[event.status] || 'bg-amber-500/15 text-amber-400 border-amber-500/30'}`}>
                     {event.status}
                   </span>
                 </div>
 
                 {/* Card body */}
-                <div className="flex flex-1 flex-col p-7">
-                  <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-muted">
-                    <span className="flex items-center gap-1.5">
-                      <FaCalendarDays className="text-ember text-[10px]" aria-hidden="true" /> {event.date}
+                <div className="flex flex-1 flex-col pl-3 sm:pl-7 p-1 sm:p-7 min-w-0 justify-between">
+                  <div className="flex flex-wrap gap-x-3 sm:gap-x-5 gap-y-0.5 sm:gap-y-1.5 text-[10px] sm:text-xs text-muted">
+                    <span className="flex items-center gap-1 sm:gap-1.5">
+                      <FaCalendarDays className="text-ember text-[9px] sm:text-[10px]" aria-hidden="true" /> {event.date}
                     </span>
-                    <span className="flex items-center gap-1.5">
-                      <FaLocationDot className="text-ember text-[10px]" aria-hidden="true" /> {event.location}
+                    <span className="flex items-center gap-1 sm:gap-1.5 truncate max-sm:max-w-[120px]">
+                      <FaLocationDot className="text-ember text-[9px] sm:text-[10px]" aria-hidden="true" /> {event.location}
                     </span>
                   </div>
 
-                  <h3 className="mt-4 font-display text-2xl font-black italic leading-tight text-sf-white uppercase">
+                  <h3 className="mt-1 sm:mt-4 font-display text-sm sm:text-2xl font-black italic leading-tight text-sf-white uppercase truncate">
                     {event.title}
                   </h3>
-                  <p className="mt-2 text-sm text-muted">{event.distance}</p>
+                  <p className="mt-0.5 sm:mt-2 text-[10px] sm:text-sm text-muted">{event.distance}</p>
 
                   {/* Slots/Progress bar (if available) */}
                   {totalSlots && (
-                    <div className="mt-5">
-                      <div className="flex items-center justify-between text-xs">
+                    <div className="mt-1.5 sm:mt-5">
+                      <div className="flex items-center justify-between text-[9px] sm:text-xs">
                         <span className="font-medium text-sf-white/70">{slotsLeft} spots left</span>
                         <span className="text-muted-dim">{fillPercent}% filled</span>
                       </div>
-                      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-steel/50">
+                      <div className="mt-0.5 sm:mt-1.5 h-0.5 sm:h-1.5 overflow-hidden rounded-full bg-steel/50">
                         <div
                           className="h-full rounded-full bg-ember transition-all duration-700"
                           style={{ width: `${fillPercent}%` }}
@@ -94,13 +94,13 @@ function FeaturedRegistration() {
                   )}
 
                   {/* Actions */}
-                  <div className="mt-auto pt-6 flex items-center gap-3">
-                    <Button to={`/register?event=${event.id}`} className="flex-1 justify-center text-xs">
+                  <div className="mt-2 sm:mt-auto pt-2 sm:pt-6 flex items-center gap-2 sm:gap-3">
+                    <Button to={`/register?event=${event.id}`} className="flex-1 justify-center !text-[10px] sm:!text-xs !py-1.5 sm:!py-3 !px-3 sm:!px-6 !h-8 sm:!h-12">
                       Register Now
                     </Button>
                     <Link
                       to={`/events/${event.id}`}
-                      className="rounded-full border border-steel px-4 py-2.5 text-xs font-semibold text-muted transition-colors hover:border-ember hover:text-ember"
+                      className="rounded-full border border-steel px-3 sm:px-4 py-1.5 sm:py-2.5 text-[10px] sm:text-xs font-semibold text-muted transition-colors hover:border-ember hover:text-ember h-8 sm:h-12 flex items-center justify-center"
                     >
                       Details
                     </Link>
