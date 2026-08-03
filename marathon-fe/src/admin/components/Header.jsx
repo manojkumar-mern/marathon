@@ -112,7 +112,7 @@ function Header({ onMenuClick }) {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-80 rounded-xl border border-steel/60 bg-carbon p-3 shadow-2xl shadow-black/30">
+            <div className="fixed left-4 right-4 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-full mt-1.5 w-auto sm:w-80 rounded-xl border border-steel/60 bg-carbon p-3 shadow-2xl shadow-black/30">
               <div className="mb-2 flex items-center justify-between border-b border-steel/60 pb-2">
                 <h3 className="text-sm font-semibold text-sf-white">Notifications</h3>
                 {unreadCount > 0 && (
