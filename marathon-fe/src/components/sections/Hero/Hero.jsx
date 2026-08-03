@@ -132,7 +132,7 @@ function Hero() {
               Register Now{' '}
               <FaArrowRight aria-hidden="true" className="text-xs ml-1" />
             </Button>
-            <Button to="/events" variant="ghost" className="h-12 px-8 text-sm uppercase tracking-wider font-bold border border-white/20 text-white hover:border-ember hover:text-ember bg-transparent">
+            <Button to="/events" variant="ghost" className="h-12 px-8 text-sm uppercase tracking-wider font-bold border border-white/20 text-white hover:border-ember hover:!text-ember bg-transparent">
               Explore Events
             </Button>
           </div>
